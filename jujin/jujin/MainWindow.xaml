@@ -1,0 +1,37 @@
+﻿<Window x:Class="jujin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <!-- 로고 이미지 -->
+            <Image Grid.Row="0" Source="/images/logo.jpg" Width="185" Height="120" HorizontalAlignment="Center" Margin="0,10,0,10"/>
+            <!-- 아이디 입력 -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBlock Text=" ID :" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
+                    <TextBox x:Name ="IdTextBox" Width="220" Height="32" Padding="8,0" VerticalContentAlignment="Center"/>
+
+                </Border>
+            </StackPanel>
+            <!-- 비밀번호 입력 -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBlock Text="PW :" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
+                    <PasswordBox x:Name="PwBox" Width="220" Height="32" Padding="8,0" VerticalContentAlignment="Center"/>
+                </Border>
+            </StackPanel>
+            <!-- 아이디 저장 체크박스 -->
+            <CheckBox x:Name="SaveIdCheckBox" Grid.Row="3" Content="아이디 저장" HorizontalAlignment="Left" Margin="0,5,0,5"/>
+            <!-- 로그인 버튼 -->
+            <Button Grid.Row="3" Content="로그인" Click="LoginButton_Click" Width="198" Height="32" HorizontalAlignment="Left" Margin="36,28,0,-3" Grid.RowSpan="2"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="jujin.MainScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="main" Height="600" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="4*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Area -->
+        <Grid Grid.Row="0" Background="#EEE" Margin="0,0,0,77">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <!-- 이미지 -->
+                <ColumnDefinition Width="189*"/>
+                <!-- 환영 텍스트 -->
+                <ColumnDefinition Width="319*"/>
+                <!-- 버튼 영역 -->
+                <ColumnDefinition Width="180*"/>
+                <!-- 부서명 -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- 로그아웃 -->
+            </Grid.ColumnDefinitions>
+            <!-- Left Image -->
+            <Image Height="60" Margin="5,0,20,0"
+                   Source="{Binding Profile_Url}" VerticalAlignment="Center"/>
+            <!-- Welcome Text -->
+            <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                       FontSize="18" FontWeight="Bold"
+                       Text="{Binding EmployeeName, StringFormat={}{0}님 환영합니다.}" Margin="0,0,22,0" Height="32"/>
+            <!-- Centered Buttons -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Height="32" Width="210">
+                <Button Content="물류관리" Width="100" Height="32"
+                        Margin="0,0,10,0"
+                        Click="LogisticsButton_Click"/>
+                <Button Content="인사관리" Width="98" Height="32"
+                        Click="HRButton_Click"/>
+            </StackPanel>
+            <!-- Department Name -->
+            <TextBlock Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="18" FontWeight="SemiBold"
+                       Text="{Binding DepartmentName, StringFormat={}{0}부서}" Height="24"/>
+            <!-- Logout Button -->
+            <Button Grid.Column="4" Content="로그아웃" Height="32"
+                    VerticalAlignment="Center" Margin="10,0,20,0"
+                    Click="LogoutButton_Click"/>
+        </Grid>
+
+        <!-- Central Content Area -->
+        <Grid Grid.Row="1">
+            <Frame x:Name="MainFrame" Margin="0,20,0,0"/>
+        </Grid>
+    </Grid>
+</Window>
