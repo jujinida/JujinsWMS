@@ -52,7 +52,7 @@ namespace jujin {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/jujin;component/itemregistrationpage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/jujin;V1.0.0.0;component/itemregistrationpage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\ItemRegistrationPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -84,7 +84,7 @@ namespace jujin {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/jujin;component/hrmanagementwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/jujin;V1.0.0.0;component/hrmanagementwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\HRManagementWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
