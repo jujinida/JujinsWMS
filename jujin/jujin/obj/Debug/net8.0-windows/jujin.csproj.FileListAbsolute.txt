@@ -81,3 +81,9 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWind
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWindow.g.cs
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\InventoryManagementPage.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\InventoryManagementPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemManagementSubPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemRegistrationPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemSearchPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemManagementSubPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemRegistrationPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ItemSearchPage.g.cs

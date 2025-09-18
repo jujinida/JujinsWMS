@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 C:\Users\park\source\repos\jujin\jujin\App.xaml
-4-1432541577
+7712021331
 137410731
-71498738749
+10432375817
 2191519274152
-HRManagementWindow.xaml;InventoryManagementPage.xaml;MainScreenWindow.xaml;MainWindow.xaml;
+HRManagementWindow.xaml;InventoryManagementPage.xaml;ItemManagementSubPage.xaml;ItemRegistrationPage.xaml;ItemSearchPage.xaml;MainScreenWindow.xaml;MainWindow.xaml;
 
 False
 

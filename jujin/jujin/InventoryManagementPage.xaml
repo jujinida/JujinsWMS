@@ -46,7 +46,7 @@
         <!-- Main Content Area -->
         <Grid Grid.Column="1" Background="#ECEFF4">
             <Border BorderBrush="#D8DEE9" BorderThickness="2" CornerRadius="5" Margin="10">
-                <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden"/>
+                <ContentControl x:Name="MainContentControl"/>
             </Border>
         </Grid>
     </Grid>

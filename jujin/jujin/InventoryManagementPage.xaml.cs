@@ -10,12 +10,14 @@ namespace jujin
         public InventoryManagementPage()
         {
             InitializeComponent();
+            // 기본적으로 품목관리 페이지 표시
+            ShowItemManagement();
         }
 
         // 메뉴 버튼 이벤트 핸들러들
         private void ItemManagementButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowPage("품목관리", "품목 등록, 조회/수정 기능이 포함된 페이지입니다.");
+            ShowItemManagement();
         }
 
         private void ReceivingManagementButton_Click(object sender, RoutedEventArgs e)
@@ -38,7 +40,14 @@ namespace jujin
             ShowPage("재고통계", "일별/월별/분기별 입출고 현황 분석 기능이 포함된 페이지입니다.");
         }
 
-        // 페이지 표시 메서드
+        // 품목관리 페이지 표시 (품목등록과 조회/수정을 포함한 서브메뉴)
+        private void ShowItemManagement()
+        {
+            var itemManagementPage = new ItemManagementSubPage();
+            MainContentControl.Content = itemManagementPage;
+        }
+
+        // 일반 페이지 표시 메서드
         private void ShowPage(string title, string description)
         {
             // 간단한 페이지 내용 생성
@@ -67,7 +76,7 @@ namespace jujin
             stackPanel.Children.Add(descText);
             page.Content = stackPanel;
             
-            MainContentFrame.Navigate(page);
+            MainContentControl.Content = page;
         }
     }
 }
