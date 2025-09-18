@@ -79,3 +79,5 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\jujin_Content.g.
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\jujin.sourcelink.json
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWindow.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\InventoryManagementPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\InventoryManagementPage.g.cs

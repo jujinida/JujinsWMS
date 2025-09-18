@@ -2,19 +2,12 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static jujin.MainWindow;
 
 namespace jujin
 {
-    public partial class HRManagementWindow : Window
+    public partial class HRManagementPage : UserControl
     {
-        public HRManagementWindow(EmployeeInfoDto UserInfo)
-        {
-            InitializeComponent();
-            this.DataContext = UserInfo;
-        }
-
-        public HRManagementWindow()
+        public HRManagementPage()
         {
             InitializeComponent();
         }
@@ -73,13 +66,5 @@ namespace jujin
             MainContentFrame.Navigate(page);
         }
 
-        // 뒤로가기 버튼
-        private void BackButton_Click(object sender, RoutedEventArgs e)
-        {
-            // MainScreenWindow로 돌아가기
-            var mainScreen = new MainScreenWindow(CurrentUserInfo);
-            mainScreen.Show();
-            this.Close();
-        }
     }
 }

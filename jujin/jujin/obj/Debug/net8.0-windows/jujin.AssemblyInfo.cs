@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("jujin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc4cca69663a582400168bd2d14e4cb5d5d65dd4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+78c0e8d5f66caab42c9838fb5e66dfae17624390")]
 [assembly: System.Reflection.AssemblyProductAttribute("jujin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("jujin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
