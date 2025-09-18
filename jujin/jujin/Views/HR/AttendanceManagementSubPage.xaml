@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="jujin.Views.HR.AttendanceManagementSubPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="#FFFFFF">
+        <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- 제목과 서브메뉴 버튼들 -->
+                <Grid Grid.Row="0" Margin="30,20,30,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Column="0" Text="근태 관리" FontSize="28" FontWeight="Bold" 
+                               Foreground="#2C3E50" VerticalAlignment="Center"/>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button x:Name="AttendanceRecordBtn" Content="출퇴근 기록" Width="120" Height="40"
+                                Background="#3498DB" Foreground="White" BorderThickness="0"
+                                Margin="0,0,10,0" Click="AttendanceRecordButton_Click"/>
+                        <Button x:Name="VacationManagementBtn" Content="휴가 관리" Width="120" Height="40"
+                                Background="#3498DB" Foreground="White" BorderThickness="0"
+                                Click="VacationManagementButton_Click"/>
+                    </StackPanel>
+                </Grid>
+                
+                <!-- 메인 콘텐츠 영역 -->
+                <Grid Grid.Row="1">
+                    <ContentControl x:Name="SubContentControl"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

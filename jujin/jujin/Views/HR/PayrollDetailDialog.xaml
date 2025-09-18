@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="jujin.Views.HR.PayrollDetailDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="급여 상세 정보" Height="600" Width="700"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Background="#FFFFFF">
+        <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="20">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="30">
+                    <!-- 제목 -->
+                    <TextBlock Text="급여 상세 정보" FontSize="24" FontWeight="Bold" 
+                               Foreground="#2C3E50" Margin="0,0,0,30"/>
+                    
+                    <!-- 급여 정보 -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- 사원번호 -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="사원번호:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="EmployeeIdText" Grid.Row="0" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 이름 -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="이름:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="EmployeeNameText" Grid.Row="1" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 부서 -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="부서:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="DepartmentText" Grid.Row="2" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 직급 -->
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="직급:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="PositionText" Grid.Row="3" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 구분선 -->
+                        <Rectangle Grid.Row="4" Grid.ColumnSpan="2" Height="2" Fill="#BDC3C7" Margin="0,20,0,20"/>
+                        
+                        <!-- 기본급 -->
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="기본급:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="BaseSalaryText" Grid.Row="5" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 수당 내역 -->
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="수당 내역:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="AllowanceDetailText" Grid.Row="6" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10" TextWrapping="Wrap"/>
+                        
+                        <!-- 총 수당 -->
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="총 수당:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="TotalAllowanceText" Grid.Row="7" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 공제 내역 -->
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="공제 내역:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="DeductionDetailText" Grid.Row="8" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10" TextWrapping="Wrap"/>
+                        
+                        <!-- 총 공제액 -->
+                        <TextBlock Grid.Row="9" Grid.Column="0" Text="총 공제액:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="TotalDeductionText" Grid.Row="9" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 구분선 -->
+                        <Rectangle Grid.Row="10" Grid.ColumnSpan="2" Height="2" Fill="#BDC3C7" Margin="0,20,0,20"/>
+                        
+                        <!-- 실지급액 -->
+                        <TextBlock Grid.Row="11" Grid.Column="0" Text="실지급액:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="Bold" FontSize="16"/>
+                        <TextBlock x:Name="NetSalaryText" Grid.Row="11" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10" FontWeight="Bold" FontSize="16"/>
+                        
+                        <!-- 지급일 -->
+                        <TextBlock Grid.Row="12" Grid.Column="0" Text="지급일:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="PayDateText" Grid.Row="12" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 지급여부 -->
+                        <TextBlock Grid.Row="13" Grid.Column="0" Text="지급여부:" 
+                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="PaymentStatusText" Grid.Row="13" Grid.Column="1" 
+                                   VerticalAlignment="Center" Margin="10,10,0,10"/>
+                        
+                        <!-- 버튼 영역 -->
+                        <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal" 
+                                    HorizontalAlignment="Right" Margin="10,30,0,0">
+                            <Button x:Name="PayButton" Content="급여 지급" Width="100" Height="35" Margin="0,0,10,0"
+                                    Background="#27AE60" Foreground="White" BorderThickness="0"
+                                    Click="PayButton_Click"/>
+                            <Button Content="닫기" Width="80" Height="35"
+                                    Background="#95A5A6" Foreground="White" BorderThickness="0"
+                                    Click="CloseButton_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>

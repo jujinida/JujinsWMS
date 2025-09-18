@@ -15,22 +15,38 @@ namespace jujin.Views.HR
         // 메뉴 버튼 이벤트 핸들러들
         private void EmployeeInfoButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowPage("직원 기본 정보 관리", 
-                "• 직원 등록/수정: 사원번호, 이름, 부서, 직급, 입사일 등 기본 정보 입력\n" +
-                "• 직원 조회: 조건(부서, 직급 등)에 따라 직원 목록을 검색하고 조회");
+            ShowEmployeeManagement();
         }
 
         private void AttendanceButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowPage("근태 관리", 
-                "• 출퇴근 기록: 출근 및 퇴근 시간을 기록하고 조회\n" +
-                "• 휴가 관리: 휴가 신청, 승인, 잔여 휴가일수 조회");
+            ShowAttendanceManagement();
         }
 
         private void PayrollButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowPage("급여 관리", 
-                "• 급여 지급 내역: 직원의 기본급, 수당, 공제액 등 간단한 급여 내역을 입력하고 조회");
+            ShowPayrollManagement();
+        }
+
+        // 직원관리 페이지 표시
+        private void ShowEmployeeManagement()
+        {
+            var employeeManagementPage = new EmployeeManagementSubPage();
+            MainContentFrame.Content = employeeManagementPage;
+        }
+
+        // 근태관리 페이지 표시
+        private void ShowAttendanceManagement()
+        {
+            var attendanceManagementPage = new AttendanceManagementSubPage();
+            MainContentFrame.Content = attendanceManagementPage;
+        }
+
+        // 급여관리 페이지 표시
+        private void ShowPayrollManagement()
+        {
+            var payrollManagementPage = new PayrollManagementPage();
+            MainContentFrame.Content = payrollManagementPage;
         }
 
         // 페이지 표시 메서드

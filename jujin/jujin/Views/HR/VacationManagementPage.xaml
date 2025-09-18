@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="jujin.Views.HR.VacationManagementPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="#FFFFFF">
+        <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- 제목 -->
+                <TextBlock Grid.Row="0" Text="휴가 관리" FontSize="28" FontWeight="Bold" 
+                           Foreground="#2C3E50" Margin="30,20,30,20"/>
+                
+                <!-- 검색 조건 -->
+                <Grid Grid.Row="1" Margin="30,0,30,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Column="0" Text="직원명:" VerticalAlignment="Center" 
+                               Margin="0,0,10,0" FontWeight="SemiBold"/>
+                    <TextBox Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    
+                    <TextBlock Grid.Column="2" Text="부서:" VerticalAlignment="Center" 
+                               Margin="20,0,10,0" FontWeight="SemiBold"/>
+                    <ComboBox Grid.Column="3" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                        <ComboBoxItem Content="전체"/>
+                        <ComboBoxItem Content="개발팀"/>
+                        <ComboBoxItem Content="마케팅팀"/>
+                        <ComboBoxItem Content="인사팀"/>
+                        <ComboBoxItem Content="재무팀"/>
+                        <ComboBoxItem Content="영업팀"/>
+                        <ComboBoxItem Content="기획팀"/>
+                    </ComboBox>
+                    
+                    <TextBlock Grid.Column="4" Text="승인상태:" VerticalAlignment="Center" 
+                               Margin="20,0,10,0" FontWeight="SemiBold"/>
+                    <ComboBox Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                        <ComboBoxItem Content="전체"/>
+                        <ComboBoxItem Content="대기"/>
+                        <ComboBoxItem Content="승인"/>
+                        <ComboBoxItem Content="거부"/>
+                    </ComboBox>
+                    
+                    <Button Grid.Column="7" Content="검색" Width="80" Height="35"
+                            Background="#3498DB" Foreground="White" BorderThickness="0"/>
+                </Grid>
+                
+                <!-- 결과 테이블 -->
+                <Border Grid.Row="2" BorderBrush="#BDC3C7" BorderThickness="1" Margin="30,0,30,30">
+                    <DataGrid x:Name="VacationDataGrid" AutoGenerateColumns="False" 
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              AlternatingRowBackground="#F8F9FA" RowBackground="White"
+                              MouseDoubleClick="VacationDataGrid_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="사원번호" Binding="{Binding EmployeeId}" Width="100"/>
+                            <DataGridTextColumn Header="이름" Binding="{Binding EmployeeName}" Width="100"/>
+                            <DataGridTextColumn Header="부서" Binding="{Binding DepartmentName}" Width="100"/>
+                            <DataGridTextColumn Header="직급" Binding="{Binding Position}" Width="80"/>
+                            <DataGridTextColumn Header="휴가신청 사유" Binding="{Binding VacationReason}" Width="150"/>
+                            <DataGridTextColumn Header="휴가 시작일" Binding="{Binding StartDate}" Width="100"/>
+                            <DataGridTextColumn Header="휴가 종료일" Binding="{Binding EndDate}" Width="100"/>
+                            <DataGridTextColumn Header="휴가 일수" Binding="{Binding VacationDays}" Width="80"/>
+                            <DataGridTextColumn Header="잔여 휴가일수" Binding="{Binding RemainingDays}" Width="100"/>
+                            <DataGridTextColumn Header="승인여부" Binding="{Binding ApprovalStatus}" Width="80"/>
+                            <DataGridTemplateColumn Header="작업" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Content="승인" Width="50" Height="25" Margin="0,0,5,0"
+                                                    Background="#27AE60" Foreground="White" BorderThickness="0"
+                                                    FontSize="12" Click="ApproveButton_Click"/>
+                                            <Button Content="거부" Width="50" Height="25"
+                                                    Background="#E74C3C" Foreground="White" BorderThickness="0"
+                                                    FontSize="12" Click="RejectButton_Click"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
