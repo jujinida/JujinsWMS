@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="jujin.HRManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="인사관리 시스템" Height="700" Width="1200">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Header Area -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="#F8F9FA">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Logo/Image -->
+            <Image Grid.Column="0" Height="50" Width="50" Margin="15,0,0,0"
+                   Source="{Binding Profile_Url}" VerticalAlignment="Center"/>
+            
+            <!-- Welcome Text -->
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0"
+                       FontSize="20" FontWeight="Bold" Foreground="#2C3E50"
+                       Text="{Binding EmployeeName, StringFormat={}{0}님 환영합니다.}"/>
+            
+            <!-- Department Name -->
+            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,20,0"
+                       FontSize="16" FontWeight="SemiBold" Foreground="#34495E"
+                       Text="{Binding DepartmentName, StringFormat={}{0}부서}"/>
+            
+            <!-- 뒤로가기 Button -->
+            <Button Grid.Column="3" Content="뒤로가기" Height="35" Width="80"
+                    VerticalAlignment="Center" Margin="0,0,20,0"
+                    Background="#E74C3C" Foreground="White" BorderThickness="0"
+                    Click="BackButton_Click"/>
+        </Grid>
+
+        <!-- Left Sidebar Menu -->
+        <Grid Grid.Row="1" Grid.Column="0" Background="#ECF0F1">
+            <StackPanel Margin="10">
+                <Border CornerRadius="5" Margin="0,10,0,0">
+                    <Button x:Name="EmployeeInfoBtn" Content="직원 기본 정보 관리" Height="50"
+                            Background="#3498DB" Foreground="White" BorderThickness="0"
+                            Click="EmployeeInfoButton_Click"/>
+                </Border>
+                
+                <Border CornerRadius="5" Margin="0,10,0,0">
+                    <Button x:Name="AttendanceBtn" Content="근태 관리" Height="50"
+                            Background="#3498DB" Foreground="White" BorderThickness="0"
+                            Click="AttendanceButton_Click"/>
+                </Border>
+                
+                <Border CornerRadius="5" Margin="0,10,0,0">
+                    <Button x:Name="PayrollBtn" Content="급여 관리" Height="50"
+                            Background="#3498DB" Foreground="White" BorderThickness="0"
+                            Click="PayrollButton_Click"/>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" Grid.Column="1" Background="#FFFFFF">
+            <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="10">
+                <Frame x:Name="MainContentFrame" NavigationUIVisibility="Hidden"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

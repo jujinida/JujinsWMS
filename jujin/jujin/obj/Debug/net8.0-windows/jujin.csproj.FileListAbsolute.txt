@@ -76,3 +76,6 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\jujin.genruntime
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\ref\jujin.dll
 C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\images\logo.jpg
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\jujin_Content.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\jujin.sourcelink.json
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\HRManagementWindow.g.cs
