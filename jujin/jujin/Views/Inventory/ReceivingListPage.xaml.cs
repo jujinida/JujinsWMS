@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -54,7 +55,10 @@ namespace jujin.Views.Inventory
                     products.Clear();
                     if (productDtos != null && productDtos.Length > 0)
                     {
-                        foreach (var dto in productDtos)
+                        // 필터링 적용
+                        var filteredProducts = ApplyFilters(productDtos);
+                        
+                        foreach (var dto in filteredProducts)
                         {
                             products.Add(new ProductInfo
                             {
@@ -100,6 +104,37 @@ namespace jujin.Views.Inventory
             var receivingWindow = new ReceivingDetailWindow(product);
             receivingWindow.ProductUpdated += async (s, e) => await LoadProducts();
             receivingWindow.ShowDialog();
+        }
+
+        private IEnumerable<ProductDto> ApplyFilters(ProductDto[] allProducts)
+        {
+            var filteredProducts = allProducts.AsEnumerable();
+
+            // 품목코드 필터
+            if (!string.IsNullOrWhiteSpace(ProductIdTextBox.Text) && 
+                int.TryParse(ProductIdTextBox.Text, out int searchProductId))
+            {
+                filteredProducts = filteredProducts.Where(p => p.ProductId == searchProductId);
+            }
+
+            // 품목명 필터
+            if (!string.IsNullOrWhiteSpace(ProductNameTextBox.Text))
+            {
+                string searchName = ProductNameTextBox.Text.Trim();
+                filteredProducts = filteredProducts.Where(p => 
+                    !string.IsNullOrEmpty(p.ProductName) && 
+                    p.ProductName.Contains(searchName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // 카테고리 필터
+            if (CategoryComboBox.SelectedItem is ComboBoxItem selectedCategoryItem && 
+                selectedCategoryItem.Content.ToString() != "전체")
+            {
+                string selectedCategory = selectedCategoryItem.Content.ToString();
+                filteredProducts = filteredProducts.Where(p => p.Category == selectedCategory);
+            }
+
+            return filteredProducts.ToArray();
         }
     }
 }

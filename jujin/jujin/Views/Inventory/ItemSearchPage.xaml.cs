@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Net.Http;
@@ -73,7 +74,10 @@ namespace jujin.Views.Inventory
                     products.Clear();
                     if (productDtos != null && productDtos.Length > 0)
                     {
-                        foreach (var dto in productDtos)
+                        // 필터링 적용
+                        var filteredProducts = ApplyFilters(productDtos);
+                        
+                        foreach (var dto in filteredProducts)
                         {
                             System.Diagnostics.Debug.WriteLine($"제품: ID={dto.ProductId}, Name={dto.ProductName}, Price={dto.Price}");
                             
@@ -108,6 +112,40 @@ namespace jujin.Views.Inventory
                 MessageBox.Show($"제품 목록을 불러오는 중 오류가 발생했습니다: {ex.Message}", 
                                 "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private IEnumerable<ProductDto> ApplyFilters(ProductDto[] allProducts)
+        {
+            var filteredProducts = allProducts.AsEnumerable();
+
+            // 품목코드 필터
+            if (!string.IsNullOrWhiteSpace(ProductIdTextBox.Text) && 
+                int.TryParse(ProductIdTextBox.Text, out int searchProductId))
+            {
+                filteredProducts = filteredProducts.Where(p => p.ProductId == searchProductId);
+                System.Diagnostics.Debug.WriteLine($"품목코드 필터 적용: {searchProductId}");
+            }
+
+            // 품목명 필터
+            if (!string.IsNullOrWhiteSpace(ProductNameTextBox.Text))
+            {
+                string searchName = ProductNameTextBox.Text.Trim();
+                filteredProducts = filteredProducts.Where(p => 
+                    !string.IsNullOrEmpty(p.ProductName) && 
+                    p.ProductName.Contains(searchName, StringComparison.OrdinalIgnoreCase));
+                System.Diagnostics.Debug.WriteLine($"품목명 필터 적용: {searchName}");
+            }
+
+            // 카테고리 필터
+            if (CategoryComboBox.SelectedItem is ComboBoxItem selectedCategoryItem && 
+                selectedCategoryItem.Content.ToString() != "전체")
+            {
+                string selectedCategory = selectedCategoryItem.Content.ToString();
+                filteredProducts = filteredProducts.Where(p => p.Category == selectedCategory);
+                System.Diagnostics.Debug.WriteLine($"카테고리 필터 적용: {selectedCategory}");
+            }
+
+            return filteredProducts.ToArray();
         }
 
         private void ItemDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)

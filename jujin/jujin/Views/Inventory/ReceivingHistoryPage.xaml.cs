@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -46,7 +47,10 @@ namespace jujin.Views.Inventory
                     receivingHistory.Clear();
                     if (historyDtos != null && historyDtos.Length > 0)
                     {
-                        foreach (var dto in historyDtos)
+                        // 필터링 적용
+                        var filteredHistory = ApplyFilters(historyDtos);
+                        
+                        foreach (var dto in filteredHistory)
                         {
                             receivingHistory.Add(new ReceivingHistoryInfo
                             {
@@ -77,6 +81,41 @@ namespace jujin.Views.Inventory
                 MessageBox.Show($"입고내역을 불러오는 중 오류가 발생했습니다: {ex.Message}", 
                                 "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            _ = LoadReceivingHistory();
+        }
+
+        private IEnumerable<ReceivingHistoryDto> ApplyFilters(ReceivingHistoryDto[] allHistory)
+        {
+            var filteredHistory = allHistory.AsEnumerable();
+
+            // 품목코드 필터
+            if (!string.IsNullOrWhiteSpace(ProductIdTextBox.Text) && 
+                int.TryParse(ProductIdTextBox.Text, out int searchProductId))
+            {
+                filteredHistory = filteredHistory.Where(h => h.ProductId == searchProductId);
+            }
+
+            // 품목명 필터
+            if (!string.IsNullOrWhiteSpace(ProductNameTextBox.Text))
+            {
+                string searchName = ProductNameTextBox.Text.Trim();
+                filteredHistory = filteredHistory.Where(h => 
+                    !string.IsNullOrEmpty(h.ProductName) && 
+                    h.ProductName.Contains(searchName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // 날짜 필터
+            if (SearchDatePicker.SelectedDate.HasValue)
+            {
+                DateTime selectedDate = SearchDatePicker.SelectedDate.Value.Date;
+                filteredHistory = filteredHistory.Where(h => h.LogDate.Date == selectedDate);
+            }
+
+            return filteredHistory.ToArray();
         }
     }
 

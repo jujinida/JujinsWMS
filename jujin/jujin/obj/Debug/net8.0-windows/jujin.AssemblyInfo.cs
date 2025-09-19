@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("jujin")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+be618e4d0cbe77110f1266e357961a781d2b4568")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98e15f0eb08b0aaeb0e494af421a75007475ded1")]
 [assembly: System.Reflection.AssemblyProductAttribute("jujin")]
 [assembly: System.Reflection.AssemblyTitleAttribute("jujin")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
