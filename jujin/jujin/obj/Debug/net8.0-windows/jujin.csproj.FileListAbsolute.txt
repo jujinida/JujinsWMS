@@ -127,3 +127,13 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\Payroll
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollManagementPage.g.cs
 C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\AWSSDK.Core.dll
 C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\AWSSDK.S3.dll
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ProductEditWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ProductEditWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ReceivingDetailWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ReceivingDetailWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ReceivingListPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ReceivingListPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingDetailWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingListPage.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingDetailWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingListPage.g.cs

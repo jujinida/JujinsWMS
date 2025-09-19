@@ -4,105 +4,89 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Background="#ECEFF4">
         <Border BorderBrush="#D8DEE9" BorderThickness="2" CornerRadius="5" Margin="10">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="30">
-                    <!-- 제목 -->
-                    <TextBlock Text="품목 등록" FontSize="28" FontWeight="Bold" 
-                               Foreground="#2E3440" Margin="0,0,0,30"/>
-                    
-                    <!-- 제품 이미지 등록 섹션 -->
-                    <Border BorderBrush="#D8DEE9" BorderThickness="1" CornerRadius="5" 
-                            Background="#F8F9FA" Padding="20" Margin="0,0,0,30">
-                        <StackPanel>
-                            <TextBlock Text="제품 이미지 등록" FontSize="18" FontWeight="SemiBold" 
-                                       Foreground="#2E3440" Margin="0,0,0,15"/>
-                            
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="300"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <!-- 이미지 선택 영역 -->
-                                <StackPanel Grid.Column="0" Margin="0,0,20,0">
-                                    <Button x:Name="SelectImageButton" Content="이미지 파일 선택" 
-                                            Height="40" Width="150" Margin="0,0,0,10"
-                                            Background="#5E81AC" Foreground="White" BorderThickness="0"
-                                            Click="SelectImageButton_Click"/>
-                                    <TextBlock x:Name="SelectedImagePath" Text="선택된 파일이 없습니다." 
-                                               FontSize="12" Foreground="#666666" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                
-                                <!-- 이미지 미리보기 영역 -->
-                                <Border Grid.Column="1" BorderBrush="#D8DEE9" BorderThickness="2" 
-                                        CornerRadius="5" Background="White" Padding="10">
-                                    <Image x:Name="ProductImagePreview" Width="250" Height="200" 
-                                           Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-                    
-                    <!-- 등록 폼 -->
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+            <Grid Margin="30">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+              
+                <!-- 왼쪽: 제품 이미지 등록 섹션 -->
+                <Border Grid.Column="0" BorderBrush="#D8DEE9" BorderThickness="1" CornerRadius="5" 
+                        Background="#F8F9FA" Padding="20" Margin="0,0,15,0">
+                    <StackPanel>
+                       
+                        <!-- 이미지 선택 버튼 -->
+                        <Button x:Name="SelectImageButton" Content="이미지 파일 선택" 
+                                Height="40" Width="180" Margin="0,0,0,15"
+                                Background="#5E81AC" Foreground="White" BorderThickness="0"
+                                Click="SelectImageButton_Click" HorizontalAlignment="Center"/>
+                        
+                        <!-- 선택된 파일 경로 -->
+                        <TextBlock x:Name="SelectedImagePath" Text="선택된 파일이 없습니다." 
+                                   FontSize="12" Foreground="#666666" TextWrapping="Wrap" 
+                                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                        
+                        <!-- 이미지 미리보기 -->
+                        <Border BorderBrush="#D8DEE9" BorderThickness="2" 
+                                CornerRadius="5" Background="White" Padding="10">
+                            <Image x:Name="ProductImagePreview" Width="280" Height="220" 
+                                   Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+                
+                <!-- 오른쪽: 제품 정보 입력 폼 -->
+                <Border Grid.Column="1" BorderBrush="#D8DEE9" BorderThickness="1" CornerRadius="5" 
+                        Background="#F8F9FA" Padding="20" Margin="15,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="제품 정보 입력" FontSize="18" FontWeight="SemiBold" 
+                                   Foreground="#2E3440" Margin="0,0,0,20" HorizontalAlignment="Center"/>
                         
                         <!-- 품목명 -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="품목명:" 
-                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
-                        <TextBox x:Name="ProductNameTextBox" Grid.Row="1" Grid.Column="1" Height="35" Margin="10,10,0,10" 
-                                 Padding="10,0" VerticalContentAlignment="Center"/>
-                        
-                                                
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="품목명:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="ProductNameTextBox" Height="35" 
+                                     Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
                         
                         <!-- 카테고리 -->
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="카테고리:" 
-                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
-                        <ComboBox x:Name="CategoryComboBox" Grid.Row="5" Grid.Column="1" Height="35" Margin="10,10,0,10" 
-                                  VerticalContentAlignment="Center" Padding="10,0">
-                            <ComboBoxItem Content="주류"/>
-                            <ComboBoxItem Content="음료"/>
-                            <ComboBoxItem Content="기타"/>
-                        </ComboBox>
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="카테고리:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox x:Name="CategoryComboBox" Height="35" 
+                                      VerticalContentAlignment="Center" Padding="10,0">
+                                <ComboBoxItem Content="주류"/>
+                                <ComboBoxItem Content="음료"/>
+                                <ComboBoxItem Content="기타"/>
+                            </ComboBox>
+                        </StackPanel>
 
                         <!-- 상품가격 -->
-                        <TextBlock Grid.Row="6" Grid.Column="0" Text="상품가격:" 
-                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
-                        <TextBox x:Name="PriceTextBox" Grid.Row="6" Grid.Column="1" Height="35" Margin="10,10,0,10" 
-                                 Padding="10,0" VerticalContentAlignment="Center"/>
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="상품가격:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="PriceTextBox" Height="35" 
+                                     Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
 
                         <!-- 초기수량 -->
-                        <TextBlock Grid.Row="7" Grid.Column="0" Text="초기수량:" 
-                                   VerticalAlignment="Center" Margin="0,10" FontWeight="SemiBold"/>
-                        <TextBox x:Name="StockQuantityTextBox" Grid.Row="7" Grid.Column="1" Height="35" Margin="10,10,0,10" 
-                                 Padding="10,0" VerticalContentAlignment="Center"/>
+                        <StackPanel Margin="0,0,0,25">
+                            <TextBlock Text="초기수량:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="StockQuantityTextBox" Height="35" 
+                                     Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
                         
                         <!-- 버튼 영역 -->
-                        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" 
-                                    HorizontalAlignment="Right" Margin="10,30,0,0">
-                            <Button x:Name="RegisterButton" Content="등록" Width="100" Height="40" Margin="0,0,10,0"
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="RegisterButton" Content="등록" Width="100" Height="40" Margin="0,0,15,0"
                                     Background="#5E81AC" Foreground="White" BorderThickness="0"
                                     Click="RegisterButton_Click"/>
                             <Button x:Name="ResetButton" Content="초기화" Width="100" Height="40"
                                     Background="#D08770" Foreground="White" BorderThickness="0"
                                     Click="ResetButton_Click"/>
                         </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

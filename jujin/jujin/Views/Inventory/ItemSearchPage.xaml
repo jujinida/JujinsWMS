@@ -30,24 +30,24 @@
                     
                     <TextBlock Grid.Column="0" Text="품목코드:" VerticalAlignment="Center" 
                                Margin="0,0,10,0" FontWeight="SemiBold"/>
-                    <TextBox Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="ProductIdTextBox" Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
                     
                     <TextBlock Grid.Column="2" Text="품목명:" VerticalAlignment="Center" 
                                Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <TextBox Grid.Column="3" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="ProductNameTextBox" Grid.Column="3" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
                     
                     <TextBlock Grid.Column="4" Text="카테고리:" VerticalAlignment="Center" 
                                Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                    <ComboBox x:Name="CategoryComboBox" Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
                         <ComboBoxItem Content="전체"/>
-                        <ComboBoxItem Content="원자재"/>
-                        <ComboBoxItem Content="완제품"/>
-                        <ComboBoxItem Content="반제품"/>
-                        <ComboBoxItem Content="소모품"/>
+                        <ComboBoxItem Content="주류"/>
+                        <ComboBoxItem Content="음료"/>
+                        <ComboBoxItem Content="기타"/>
                     </ComboBox>
                     
                     <Button Grid.Column="7" Content="검색" Width="80" Height="35"
-                            Background="#5E81AC" Foreground="White" BorderThickness="0"/>
+                            Background="#5E81AC" Foreground="White" BorderThickness="0"
+                            Click="SearchButton_Click"/>
                 </Grid>
                 
                 <!-- 결과 테이블 -->
@@ -55,26 +55,20 @@
                     <DataGrid x:Name="ItemDataGrid" AutoGenerateColumns="False" 
                               CanUserAddRows="False" CanUserDeleteRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                              AlternatingRowBackground="#F8F9FA" RowBackground="White">
+                              AlternatingRowBackground="#F8F9FA" RowBackground="White"
+                              MouseDoubleClick="ItemDataGrid_MouseDoubleClick">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="품목코드" Binding="{Binding ItemCode}" Width="120"/>
-                            <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="200"/>
-                            <DataGridTextColumn Header="규격" Binding="{Binding Specification}" Width="150"/>
-                            <DataGridTextColumn Header="단위" Binding="{Binding Unit}" Width="80"/>
-                            <DataGridTextColumn Header="안전재고량" Binding="{Binding SafetyStock}" Width="100"/>
+                            <DataGridTextColumn Header="품목코드" Binding="{Binding ProductId}" Width="100"/>
+                            <DataGridTextColumn Header="품목명" Binding="{Binding ProductName}" Width="200"/>
                             <DataGridTextColumn Header="카테고리" Binding="{Binding Category}" Width="100"/>
-                            <DataGridTextColumn Header="공급업체" Binding="{Binding Supplier}" Width="150"/>
-                            <DataGridTemplateColumn Header="작업" Width="120">
+                            <DataGridTextColumn Header="가격" Binding="{Binding Price, StringFormat={}{0:#,##0}원}" Width="120"/>                            
+                            <DataGridTextColumn Header="재고량" Binding="{Binding StockQuantity}" Width="100"/>
+                            <DataGridTemplateColumn Header="작업" Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Content="수정" Width="50" Height="25" Margin="0,0,5,0"
-                                                    Background="#3498DB" Foreground="White" BorderThickness="0"
-                                                    FontSize="12"/>
-                                            <Button Content="삭제" Width="50" Height="25"
-                                                    Background="#E74C3C" Foreground="White" BorderThickness="0"
-                                                    FontSize="12"/>
-                                        </StackPanel>
+                                        <Button Content="수정" Width="60" Height="25" 
+                                                Background="#5E81AC" Foreground="White" BorderThickness="0"
+                                                Click="EditButton_Click" Tag="{Binding}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

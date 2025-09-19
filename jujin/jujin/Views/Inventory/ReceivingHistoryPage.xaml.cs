@@ -1,5 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,40 +10,95 @@ namespace jujin.Views.Inventory
 {
     public partial class ReceivingHistoryPage : UserControl
     {
+        private readonly HttpClient httpClient;
+        private ObservableCollection<ReceivingHistoryInfo> receivingHistory;
+
         public ReceivingHistoryPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            httpClient = new HttpClient();
+            receivingHistory = new ObservableCollection<ReceivingHistoryInfo>();
+            ReceivingHistoryDataGrid.ItemsSource = receivingHistory;
+            Loaded += ReceivingHistoryPage_Loaded;
         }
 
-        private void LoadSampleData()
+        private async void ReceivingHistoryPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var sampleReceivings = new ObservableCollection<ReceivingInfo>
-            {
-                new ReceivingInfo { ReceivingId = "R001", ReceivingDate = "2024-01-15", ItemCode = "ITEM001", ItemName = "스마트폰", Quantity = 50, Unit = "개", Supplier = "삼성전자", Manager = "김철수", Reason = "정상 구매", Remarks = "신제품 입고" },
-                new ReceivingInfo { ReceivingId = "R002", ReceivingDate = "2024-01-16", ItemCode = "ITEM002", ItemName = "배터리", Quantity = 100, Unit = "개", Supplier = "LG화학", Manager = "이영희", Reason = "재고 보충", Remarks = "안전재고 보충" },
-                new ReceivingInfo { ReceivingId = "R003", ReceivingDate = "2024-01-17", ItemCode = "ITEM003", ItemName = "LCD패널", Quantity = 200, Unit = "개", Supplier = "LG디스플레이", Manager = "박민수", Reason = "정상 구매", Remarks = "대량 주문" },
-                new ReceivingInfo { ReceivingId = "R004", ReceivingDate = "2024-01-18", ItemCode = "ITEM004", ItemName = "케이스", Quantity = 300, Unit = "개", Supplier = "케이스코리아", Manager = "최지영", Reason = "반품 입고", Remarks = "불량품 교체" },
-                new ReceivingInfo { ReceivingId = "R005", ReceivingDate = "2024-01-19", ItemCode = "ITEM005", ItemName = "충전기", Quantity = 150, Unit = "개", Supplier = "애플", Manager = "정현우", Reason = "정상 구매", Remarks = "신제품 출시 대비" }
-            };
+            await LoadReceivingHistory();
+        }
 
-            ReceivingDataGrid.ItemsSource = sampleReceivings;
+        private async Task LoadReceivingHistory()
+        {
+            try
+            {
+                var response = await httpClient.GetAsync("http://localhost:5185/api/product/receiving-history");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var historyDtos = JsonSerializer.Deserialize<ReceivingHistoryDto[]>(json, options);
+                    
+                    receivingHistory.Clear();
+                    if (historyDtos != null && historyDtos.Length > 0)
+                    {
+                        foreach (var dto in historyDtos)
+                        {
+                            receivingHistory.Add(new ReceivingHistoryInfo
+                            {
+                                LogId = dto.LogId,
+                                LogDate = dto.LogDate,
+                                ProductId = dto.ProductId,
+                                ProductName = dto.ProductName ?? "이름 없음",
+                                QuantityChanged = dto.QuantityChanged,
+                                CurrentQuantity = dto.CurrentQuantity
+                            });
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("입고내역이 없습니다.", "알림", 
+                                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"입고내역을 불러오는데 실패했습니다.\n상태: {response.StatusCode}\n내용: {errorContent}", "오류", 
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"입고내역을 불러오는 중 오류가 발생했습니다: {ex.Message}", 
+                                "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
-    // 입고 정보 클래스
-    public class ReceivingInfo
+    // 입고내역 정보 클래스 (UI 바인딩용)
+    public class ReceivingHistoryInfo
     {
-        public string ReceivingId { get; set; }
-        public string ReceivingDate { get; set; }
-        public string ItemCode { get; set; }
-        public string ItemName { get; set; }
-        public int Quantity { get; set; }
-        public string Unit { get; set; }
-        public string Supplier { get; set; }
-        public string Manager { get; set; }
-        public string Reason { get; set; }
-        public string Remarks { get; set; }
+        public int LogId { get; set; }
+        public DateTime LogDate { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int QuantityChanged { get; set; }
+        public int CurrentQuantity { get; set; }
+    }
+
+    // 백엔드 DTO 클래스 (API 통신용)
+    public class ReceivingHistoryDto
+    {
+        public int LogId { get; set; }
+        public DateTime LogDate { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int QuantityChanged { get; set; }
+        public int CurrentQuantity { get; set; }
     }
 }

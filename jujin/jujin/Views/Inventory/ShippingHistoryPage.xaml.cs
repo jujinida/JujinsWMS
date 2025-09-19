@@ -1,5 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,40 +10,95 @@ namespace jujin.Views.Inventory
 {
     public partial class ShippingHistoryPage : UserControl
     {
+        private readonly HttpClient httpClient;
+        private ObservableCollection<ShippingHistoryInfo> shippingHistory;
+
         public ShippingHistoryPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            httpClient = new HttpClient();
+            shippingHistory = new ObservableCollection<ShippingHistoryInfo>();
+            ShippingHistoryDataGrid.ItemsSource = shippingHistory;
+            Loaded += ShippingHistoryPage_Loaded;
         }
 
-        private void LoadSampleData()
+        private async void ShippingHistoryPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var sampleShippings = new ObservableCollection<ShippingInfo>
-            {
-                new ShippingInfo { ShippingId = "S001", ShippingDate = "2024-01-15", ItemCode = "ITEM001", ItemName = "스마트폰", Quantity = 20, Unit = "개", Customer = "삼성전자", Manager = "김철수", Reason = "정상 판매", Remarks = "신제품 출고" },
-                new ShippingInfo { ShippingId = "S002", ShippingDate = "2024-01-16", ItemCode = "ITEM002", ItemName = "배터리", Quantity = 50, Unit = "개", Customer = "LG화학", Manager = "이영희", Reason = "샘플 제공", Remarks = "신제품 테스트용" },
-                new ShippingInfo { ShippingId = "S003", ShippingDate = "2024-01-17", ItemCode = "ITEM003", ItemName = "LCD패널", Quantity = 100, Unit = "개", Customer = "LG디스플레이", Manager = "박민수", Reason = "정상 판매", Remarks = "대량 주문" },
-                new ShippingInfo { ShippingId = "S004", ShippingDate = "2024-01-18", ItemCode = "ITEM004", ItemName = "케이스", Quantity = 200, Unit = "개", Customer = "케이스코리아", Manager = "최지영", Reason = "폐기 처리", Remarks = "불량품 폐기" },
-                new ShippingInfo { ShippingId = "S005", ShippingDate = "2024-01-19", ItemCode = "ITEM005", ItemName = "충전기", Quantity = 30, Unit = "개", Customer = "애플", Manager = "정현우", Reason = "정상 판매", Remarks = "신제품 출시 대비" }
-            };
+            await LoadShippingHistory();
+        }
 
-            ShippingDataGrid.ItemsSource = sampleShippings;
+        private async Task LoadShippingHistory()
+        {
+            try
+            {
+                var response = await httpClient.GetAsync("http://localhost:5185/api/product/shipping-history");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var historyDtos = JsonSerializer.Deserialize<ShippingHistoryDto[]>(json, options);
+                    
+                    shippingHistory.Clear();
+                    if (historyDtos != null && historyDtos.Length > 0)
+                    {
+                        foreach (var dto in historyDtos)
+                        {
+                            shippingHistory.Add(new ShippingHistoryInfo
+                            {
+                                LogId = dto.LogId,
+                                LogDate = dto.LogDate,
+                                ProductId = dto.ProductId,
+                                ProductName = dto.ProductName ?? "이름 없음",
+                                QuantityChanged = dto.QuantityChanged,
+                                CurrentQuantity = dto.CurrentQuantity
+                            });
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("출고내역이 없습니다.", "알림", 
+                                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    MessageBox.Show($"출고내역을 불러오는데 실패했습니다.\n상태: {response.StatusCode}\n내용: {errorContent}", "오류", 
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"출고내역을 불러오는 중 오류가 발생했습니다: {ex.Message}", 
+                                "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 
-    // 출고 정보 클래스
-    public class ShippingInfo
+    // 출고내역 정보 클래스 (UI 바인딩용)
+    public class ShippingHistoryInfo
     {
-        public string ShippingId { get; set; }
-        public string ShippingDate { get; set; }
-        public string ItemCode { get; set; }
-        public string ItemName { get; set; }
-        public int Quantity { get; set; }
-        public string Unit { get; set; }
-        public string Customer { get; set; }
-        public string Manager { get; set; }
-        public string Reason { get; set; }
-        public string Remarks { get; set; }
+        public int LogId { get; set; }
+        public DateTime LogDate { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int QuantityChanged { get; set; }
+        public int CurrentQuantity { get; set; }
+    }
+
+    // 백엔드 DTO 클래스 (API 통신용)
+    public class ShippingHistoryDto
+    {
+        public int LogId { get; set; }
+        public DateTime LogDate { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int QuantityChanged { get; set; }
+        public int CurrentQuantity { get; set; }
     }
 }
