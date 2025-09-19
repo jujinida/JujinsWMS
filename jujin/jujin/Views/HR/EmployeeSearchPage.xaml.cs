@@ -1,5 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,28 +10,90 @@ namespace jujin.Views.HR
 {
     public partial class EmployeeSearchPage : UserControl
     {
+        private readonly HttpClient httpClient;
+        private ObservableCollection<EmployeeInfo> allEmployees;
+        private ObservableCollection<EmployeeInfo> filteredEmployees;
+
         public EmployeeSearchPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            httpClient = new HttpClient();
+            allEmployees = new ObservableCollection<EmployeeInfo>();
+            filteredEmployees = new ObservableCollection<EmployeeInfo>();
+            EmployeeDataGrid.ItemsSource = filteredEmployees;
+            Loaded += EmployeeSearchPage_Loaded;
         }
 
-        private void LoadSampleData()
+        private async void EmployeeSearchPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var sampleEmployees = new ObservableCollection<EmployeeInfo>
-            {
-                new EmployeeInfo { EmployeeId = "EMP001", EmployeeName = "김철수", DepartmentName = "개발팀", Position = "대리", HireDate = "2020-03-15", BirthDate = "1985-05-20", PhoneNumber = "010-1234-5678", Email = "kim@company.com", Salary = "4,500만원" },
-                new EmployeeInfo { EmployeeId = "EMP002", EmployeeName = "이영희", DepartmentName = "마케팅팀", Position = "과장", HireDate = "2019-07-01", BirthDate = "1982-12-10", PhoneNumber = "010-2345-6789", Email = "lee@company.com", Salary = "5,200만원" },
-                new EmployeeInfo { EmployeeId = "EMP003", EmployeeName = "박민수", DepartmentName = "인사팀", Position = "차장", HireDate = "2018-01-10", BirthDate = "1980-08-25", PhoneNumber = "010-3456-7890", Email = "park@company.com", Salary = "6,000만원" },
-                new EmployeeInfo { EmployeeId = "EMP004", EmployeeName = "최지영", DepartmentName = "재무팀", Position = "부장", HireDate = "2017-06-20", BirthDate = "1978-03-15", PhoneNumber = "010-4567-8901", Email = "choi@company.com", Salary = "7,500만원" },
-                new EmployeeInfo { EmployeeId = "EMP005", EmployeeName = "정현우", DepartmentName = "영업팀", Position = "사원", HireDate = "2021-09-01", BirthDate = "1990-11-30", PhoneNumber = "010-5678-9012", Email = "jung@company.com", Salary = "3,800만원" },
-                new EmployeeInfo { EmployeeId = "EMP006", EmployeeName = "한소영", DepartmentName = "기획팀", Position = "대리", HireDate = "2020-11-15", BirthDate = "1987-07-08", PhoneNumber = "010-6789-0123", Email = "han@company.com", Salary = "4,200만원" },
-                new EmployeeInfo { EmployeeId = "EMP007", EmployeeName = "윤태호", DepartmentName = "개발팀", Position = "과장", HireDate = "2018-04-01", BirthDate = "1983-09-12", PhoneNumber = "010-7890-1234", Email = "yoon@company.com", Salary = "5,800만원" },
-                new EmployeeInfo { EmployeeId = "EMP008", EmployeeName = "강미래", DepartmentName = "마케팅팀", Position = "사원", HireDate = "2022-02-01", BirthDate = "1992-04-18", PhoneNumber = "010-8901-2345", Email = "kang@company.com", Salary = "3,500만원" }
-            };
+            await LoadEmployees();
+        }
 
-            EmployeeDataGrid.ItemsSource = sampleEmployees;
+        private async Task LoadEmployees()
+        {
+            try
+            {
+                var response = await httpClient.GetAsync("http://localhost:5185/api/hr/employees");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var employeeDtos = JsonSerializer.Deserialize<List<EmployeeDto>>(json, options);
+
+                    allEmployees.Clear();
+                    foreach (var dto in employeeDtos)
+                    {
+                        allEmployees.Add(new EmployeeInfo
+                        {
+                            EmployeeId = dto.EmployeeId,
+                            EmployeeName = dto.EmployeeName,
+                            DepartmentName = GetDepartmentName(dto.DepartmentId),
+                            Position = dto.Position,
+                            HireDate = dto.HireDate,
+                            BirthDate = dto.BirthDate,
+                            PhoneNumber = dto.PhoneNumber,
+                            Address = dto.Address,
+                            Email = dto.Email ?? "",
+                            Salary = dto.Salary,
+                            ProfileUrl = dto.ProfileUrl
+                        });
+                    }
+
+                    ApplyFilters();
+                }
+                else
+                {
+                    MessageBox.Show("직원 목록을 불러오는데 실패했습니다.", "오류", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"직원 목록을 불러오는 중 오류가 발생했습니다: {ex.Message}", "오류", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string GetDepartmentName(int departmentId)
+        {
+            return departmentId switch
+            {
+                1 => "IT",
+                2 => "마케팅",
+                3 => "인사",
+                4 => "재무",
+                5 => "영업",
+                6 => "기획",
+                _ => "알 수 없음"
+            };
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
         }
 
         private void EmployeeDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -54,6 +119,55 @@ namespace jujin.Views.HR
             }
         }
 
+        private void ApplyFilters()
+        {
+            filteredEmployees.Clear();
+
+            var employeeIdFilter = GetTextBoxValue("EmployeeIdTextBox");
+            var nameFilter = GetTextBoxValue("NameTextBox");
+            var departmentFilter = GetComboBoxValue("DepartmentComboBox");
+
+            foreach (var employee in allEmployees)
+            {
+                bool matches = true;
+
+                if (!string.IsNullOrEmpty(employeeIdFilter) && 
+                    !employee.EmployeeName.Contains(employeeIdFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches = false;
+                }
+
+                if (!string.IsNullOrEmpty(nameFilter) && 
+                    !employee.EmployeeName.Contains(nameFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    matches = false;
+                }
+
+                if (!string.IsNullOrEmpty(departmentFilter) && departmentFilter != "전체" && 
+                    employee.DepartmentName != departmentFilter)
+                {
+                    matches = false;
+                }
+
+                if (matches)
+                {
+                    filteredEmployees.Add(employee);
+                }
+            }
+        }
+
+        private string GetTextBoxValue(string name)
+        {
+            var textBox = FindName(name) as TextBox;
+            return textBox?.Text?.Trim() ?? "";
+        }
+
+        private string GetComboBoxValue(string name)
+        {
+            var comboBox = FindName(name) as ComboBox;
+            return (comboBox?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
+        }
+
         private void ShowEditDialog()
         {
             var selectedEmployee = EmployeeDataGrid.SelectedItem as EmployeeInfo;
@@ -64,7 +178,7 @@ namespace jujin.Views.HR
                 editDialog.ShowDialog();
                 
                 // 다이얼로그가 닫힌 후 데이터 새로고침
-                LoadSampleData();
+                LoadEmployees();
             }
         }
     }
@@ -72,7 +186,7 @@ namespace jujin.Views.HR
     // 직원 정보 클래스
     public class EmployeeInfo
     {
-        public string EmployeeId { get; set; }
+        public int EmployeeId { get; set; }
         public string EmployeeName { get; set; }
         public string DepartmentName { get; set; }
         public string Position { get; set; }
@@ -80,6 +194,24 @@ namespace jujin.Views.HR
         public string BirthDate { get; set; }
         public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public string Salary { get; set; }
+        public int Salary { get; set; }
+        public string Address { get; set; }
+        public string ProfileUrl { get; set; }
+    }
+
+    // 백엔드에서 받아오는 DTO
+    public class EmployeeDto
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public string BirthDate { get; set; }
+        public string HireDate { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Address { get; set; }
+        public string Position { get; set; }
+        public string Email { get; set; }
+        public int DepartmentId { get; set; }
+        public int Salary { get; set; }
+        public string ProfileUrl { get; set; }
     }
 }

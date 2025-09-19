@@ -17,6 +17,37 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "GetEmployees",
+    "RelativePath": "api/HR/employees",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "UpdateEmployee",
+    "RelativePath": "api/HR/employees/{employeeId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employeeId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "WebApplication1.Controllers.EmployeeRegistrationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
     "Method": "RegisterEmployee",
     "RelativePath": "api/HR/register",
     "HttpMethod": "POST",
