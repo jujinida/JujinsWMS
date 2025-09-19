@@ -57,6 +57,14 @@ namespace jujin.Views.Auth
             public string Profile_Url { get; set; }
         }
 
+        private void PwBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                LoginButton_Click(sender, e);
+            }
+        }
+
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             string userId = IdTextBox.Text.Trim();

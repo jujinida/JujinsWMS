@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 
 // ILogger를 사용하기 위해 추가
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 
 namespace WebApplication1.Controllers
@@ -15,10 +16,12 @@ namespace WebApplication1.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController(ILogger<AuthController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
         public class EmployeeInfoDto
         {
@@ -34,22 +37,27 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            _logger.LogInformation("Login 요청이 들어옴: UserId={UserId}", request.UserId);
+            _logger.LogInformation("Login 요청이 들어옴: UserId={UserId}, Timestamp={Timestamp}", request.UserId, DateTime.UtcNow);
 
-            string connectionString = "Server=jujin.database.windows.net;Database=jujinscshop;User Id=jujin;Password=dkvm7607@;";
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
             // 변수 선언을 try-catch 블록 바깥으로 이동
             string pwHash = null;
             EmployeeInfoDto employeeInfo = null;
 
-            try
+            int maxRetries = 3;
+            int retryDelay = 1000; // 1초
+
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
             {
-                using (var conn = new SqlConnection(connectionString))
+                try
                 {
-                    conn.Open();
-                    _logger.LogDebug("DB 연결 성공");
+                    using (var conn = new SqlConnection(connectionString))
+                    {
+                        conn.Open();
+                        _logger.LogDebug("DB 연결 성공 (시도 {Attempt}/{MaxRetries})", attempt, maxRetries);
 
                     // 비밀번호 해시와 직원 정보를 하나의 쿼리로 조회
                     string query = @"SELECT 
@@ -108,12 +116,33 @@ namespace WebApplication1.Controllers
                             }
                         }
                     }
+                    }
+                    
+                    // 성공 시 루프 종료
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "DB 연결 또는 쿼리 실행 중 오류 발생");
-                return StatusCode(500, new { message = "서버 오류" });
+                catch (SqlException sqlEx) when (attempt < maxRetries)
+                {
+                    _logger.LogWarning(sqlEx, "DB 연결 실패 (시도 {Attempt}/{MaxRetries}), 재시도 중...", attempt, maxRetries);
+                    
+                    // 연결 타임아웃이나 일시적 오류인 경우 재시도
+                    if (sqlEx.Number == -2 || sqlEx.Number == 2 || sqlEx.Number == 53) // 연결 타임아웃 관련 오류
+                    {
+                        await Task.Delay(retryDelay * attempt); // 지수 백오프
+                        continue;
+                    }
+                    else
+                    {
+                        // 다른 SQL 오류는 재시도하지 않음
+                        _logger.LogError(sqlEx, "DB 연결 또는 쿼리 실행 중 오류 발생");
+                        return StatusCode(500, new { message = "서버 오류" });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "DB 연결 또는 쿼리 실행 중 오류 발생");
+                    return StatusCode(500, new { message = "서버 오류" });
+                }
             }
 
             // JWT 생성 (성공 시에만 실행)

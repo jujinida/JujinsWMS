@@ -125,3 +125,5 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\Payroll
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollManagementPage.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollDetailDialog.g.cs
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollManagementPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\AWSSDK.Core.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\AWSSDK.S3.dll

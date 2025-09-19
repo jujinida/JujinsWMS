@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "LKD0xeNheVw=",
+  "dgSpecHash": "aT8hthySm4w=",
   "success": true,
   "projectFilePath": "C:\\Users\\park\\source\\repos\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\park\\.nuget\\packages\\awssdk.core\\4.0.0.28\\awssdk.core.4.0.0.28.nupkg.sha512",
+    "C:\\Users\\park\\.nuget\\packages\\awssdk.s3\\4.0.7.2\\awssdk.s3.4.0.7.2.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",

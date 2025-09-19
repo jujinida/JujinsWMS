@@ -8,12 +8,32 @@
     ".NETCoreApp,Version=v8.0": {
       "WebApplication1/1.0.0": {
         "dependencies": {
+          "AWSSDK.S3": "4.0.7.2",
           "BCrypt.Net-Next": "4.0.3",
           "Microsoft.Data.SqlClient": "6.1.1",
           "Swashbuckle.AspNetCore": "6.6.2"
         },
         "runtime": {
           "WebApplication1.dll": {}
+        }
+      },
+      "AWSSDK.Core/4.0.0.28": {
+        "runtime": {
+          "lib/net8.0/AWSSDK.Core.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.28"
+          }
+        }
+      },
+      "AWSSDK.S3/4.0.7.2": {
+        "dependencies": {
+          "AWSSDK.Core": "4.0.0.28"
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.S3.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.7.2"
+          }
         }
       },
       "Azure.Core/1.47.1": {
@@ -456,6 +476,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AWSSDK.Core/4.0.0.28": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CwCRCIbkDEc7DHwhk7BFt6k8985ytWyqwmRCiavI5/INkTyA/xSKXHS8jm8n/Xq74eRKfX7uAnD5hvI3TqpT0g==",
+      "path": "awssdk.core/4.0.0.28",
+      "hashPath": "awssdk.core.4.0.0.28.nupkg.sha512"
+    },
+    "AWSSDK.S3/4.0.7.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dSE0ydwtZp9p+vmA/FHB8x27xNW9bxItuWQu0YHnm+D3EvKI6yQZ0wxBPkgOJJEuatgtc81hHgG8OA+VJfEydg==",
+      "path": "awssdk.s3/4.0.7.2",
+      "hashPath": "awssdk.s3.4.0.7.2.nupkg.sha512"
     },
     "Azure.Core/1.47.1": {
       "type": "package",

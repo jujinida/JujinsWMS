@@ -25,7 +25,7 @@
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
                 <TextBlock Text="PW :" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
-                    <PasswordBox x:Name="PwBox" Width="220" Height="32" Padding="8,0" VerticalContentAlignment="Center"/>
+                    <PasswordBox x:Name="PwBox" Width="220" Height="32" Padding="8,0" VerticalContentAlignment="Center" KeyDown="PwBox_KeyDown"/>
                 </Border>
             </StackPanel>
             <!-- 아이디 저장 체크박스 -->
