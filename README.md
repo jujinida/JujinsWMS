@@ -19,7 +19,7 @@ C#, WPF, ASP.Net, AWS S3
   + 출고관리
   + 재고현황
   + 재고통계
-+인사관리 기능
++ 인사관리 기능
   + 직원등록
   + 직원 조회/ 수정
   + 출퇴근 기록
@@ -31,6 +31,3 @@ C#, WPF, ASP.Net, AWS S3
 
 # 시연영상
 [https://youtu.be/XOwyCXsngZ0]
-
-# 최종 발표자료
-[(https://www.canva.com/design/DAGyomBQRs0/4u21qiH1jrva4l-i-febYQ/edit?utm_content=DAGyomBQRs0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)](https://www.canva.com/design/DAGyomBQRs0/4u21qiH1jrva4l-i-febYQ/edit?utm_content=DAGyomBQRs0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
