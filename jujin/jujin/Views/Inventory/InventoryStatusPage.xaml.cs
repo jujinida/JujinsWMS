@@ -1,5 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,43 +10,105 @@ namespace jujin.Views.Inventory
 {
     public partial class InventoryStatusPage : UserControl
     {
+        private readonly HttpClient httpClient;
+        private ObservableCollection<ProductInfo> inventoryItems;
+
         public InventoryStatusPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            httpClient = new HttpClient();
+            inventoryItems = new ObservableCollection<ProductInfo>();
+            InventoryDataGrid.ItemsSource = inventoryItems;
+            LoadInventoryData();
         }
 
-        private void LoadSampleData()
+        private async void LoadInventoryData()
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var sampleInventory = new ObservableCollection<InventoryItem>
+            try
             {
-                new InventoryItem { ItemCode = "ITEM001", ItemName = "스마트폰", Specification = "갤럭시 S24", Unit = "개", SafetyStock = 50, CurrentStock = 120, Category = "완제품", Supplier = "삼성전자", Location = "A-01-01", Status = "정상" },
-                new InventoryItem { ItemCode = "ITEM002", ItemName = "배터리", Specification = "5000mAh", Unit = "개", SafetyStock = 100, CurrentStock = 45, Category = "원자재", Supplier = "LG화학", Location = "B-02-03", Status = "부족" },
-                new InventoryItem { ItemCode = "ITEM003", ItemName = "LCD패널", Specification = "6.1인치", Unit = "개", SafetyStock = 20, CurrentStock = 15, Category = "원자재", Supplier = "LG디스플레이", Location = "C-01-05", Status = "부족" },
-                new InventoryItem { ItemCode = "ITEM004", ItemName = "케이스", Specification = "실리콘", Unit = "개", SafetyStock = 200, CurrentStock = 350, Category = "소모품", Supplier = "케이스코리아", Location = "D-03-02", Status = "정상" },
-                new InventoryItem { ItemCode = "ITEM005", ItemName = "충전기", Specification = "USB-C", Unit = "개", SafetyStock = 80, CurrentStock = 95, Category = "소모품", Supplier = "애플", Location = "E-01-04", Status = "정상" },
-                new InventoryItem { ItemCode = "ITEM006", ItemName = "메인보드", Specification = "B550", Unit = "개", SafetyStock = 30, CurrentStock = 25, Category = "원자재", Supplier = "ASUS", Location = "F-02-01", Status = "부족" },
-                new InventoryItem { ItemCode = "ITEM007", ItemName = "RAM", Specification = "16GB DDR4", Unit = "개", SafetyStock = 50, CurrentStock = 65, Category = "원자재", Supplier = "삼성전자", Location = "G-01-03", Status = "정상" },
-                new InventoryItem { ItemCode = "ITEM008", ItemName = "SSD", Specification = "1TB NVMe", Unit = "개", SafetyStock = 40, CurrentStock = 38, Category = "원자재", Supplier = "삼성전자", Location = "H-02-05", Status = "부족" }
-            };
+                var response = await httpClient.GetAsync("http://localhost:5185/api/product/inventory-status");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    
+                    var inventoryDtos = JsonSerializer.Deserialize<InventoryStatusDto[]>(json, options);
+                    
+                    inventoryItems.Clear();
+                    if (inventoryDtos != null && inventoryDtos.Length > 0)
+                    {
+                        foreach (var dto in inventoryDtos)
+                        {
+                            var status = DetermineStatus(dto.StockQuantity, dto.SafetyStock);
+                            
+                            inventoryItems.Add(new ProductInfo
+                            {
+                                ProductId = dto.ProductId,
+                                ProductName = dto.ProductName ?? "이름 없음",
+                                Category = dto.Category ?? "미분류",
+                                Price = dto.Price,
+                                StockQuantity = dto.StockQuantity,
+                                SafetyStock = dto.SafetyStock,
+                                LocationId = 0, // 재고 현황에서는 위치 정보가 필요 없으므로 0으로 설정
+                                ImageUrl = dto.ImageUrl,
+                                Status = status
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("재고 현황 데이터를 불러오는데 실패했습니다.", "오류", 
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"재고 현황 데이터 로드 중 오류가 발생했습니다: {ex.Message}", "오류", 
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-            InventoryDataGrid.ItemsSource = sampleInventory;
+        private string DetermineStatus(int stockQuantity, int safetyStock)
+        {
+            if (stockQuantity < safetyStock)
+            {
+                return "위험";
+            }
+            else if (stockQuantity < safetyStock * 1.2)
+            {
+                return "경고";
+            }
+            else
+            {
+                return "안전";
+            }
+        }
+
+        private void DetailButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is ProductInfo item)
+            {
+                var detailWindow = new InventoryDetailWindow(item);
+                detailWindow.ShowDialog();
+            }
         }
     }
 
-    // 재고 정보 클래스
-    public class InventoryItem
+    // 백엔드 DTO 클래스
+    public class InventoryStatusDto
     {
-        public string ItemCode { get; set; }
-        public string ItemName { get; set; }
-        public string Specification { get; set; }
-        public string Unit { get; set; }
-        public int SafetyStock { get; set; }
-        public int CurrentStock { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
         public string Category { get; set; }
-        public string Supplier { get; set; }
-        public string Location { get; set; }
-        public string Status { get; set; }
+        public int SafetyStock { get; set; }
+        public int StockQuantity { get; set; }
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

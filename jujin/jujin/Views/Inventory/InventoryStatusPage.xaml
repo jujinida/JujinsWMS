@@ -57,27 +57,40 @@
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               AlternatingRowBackground="#F8F9FA" RowBackground="White">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="품목코드" Binding="{Binding ItemCode}" Width="100"/>
-                            <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="150"/>
-                            <DataGridTextColumn Header="규격" Binding="{Binding Specification}" Width="120"/>
-                            <DataGridTextColumn Header="단위" Binding="{Binding Unit}" Width="60"/>
-                            <DataGridTextColumn Header="안전재고량" Binding="{Binding SafetyStock}" Width="100"/>
-                            <DataGridTextColumn Header="현재고" Binding="{Binding CurrentStock}" Width="80"/>
+                            <DataGridTextColumn Header="품목코드" Binding="{Binding ProductId}" Width="100"/>
+                            <DataGridTextColumn Header="품목명" Binding="{Binding ProductName}" Width="200"/>
                             <DataGridTextColumn Header="카테고리" Binding="{Binding Category}" Width="100"/>
-                            <DataGridTextColumn Header="공급업체" Binding="{Binding Supplier}" Width="120"/>
-                            <DataGridTextColumn Header="재고위치" Binding="{Binding Location}" Width="100"/>
-                            <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="80"/>
-                            <DataGridTemplateColumn Header="작업" Width="120">
+                            <DataGridTextColumn Header="안전재고량" Binding="{Binding SafetyStock}" Width="100"/>
+                            <DataGridTextColumn Header="현재고" Binding="{Binding StockQuantity}" Width="80"/>
+                            <DataGridTemplateColumn Header="상태" Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Content="수정" Width="50" Height="25" Margin="0,0,5,0"
-                                                    Background="#3498DB" Foreground="White" BorderThickness="0"
-                                                    FontSize="12"/>
-                                            <Button Content="이동" Width="50" Height="25"
-                                                    Background="#F39C12" Foreground="White" BorderThickness="0"
-                                                    FontSize="12"/>
-                                        </StackPanel>
+                                        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="위험">
+                                                            <Setter Property="Foreground" Value="Red"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="경고">
+                                                            <Setter Property="Foreground" Value="Orange"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="안전">
+                                                            <Setter Property="Foreground" Value="Green"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="작업" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="상세" Width="60" Height="25" 
+                                                Background="#5E81AC" Foreground="White" BorderThickness="0"
+                                                Click="DetailButton_Click" Tag="{Binding}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

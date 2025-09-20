@@ -48,7 +48,7 @@ namespace jujin.Views.Inventory
             PriceTextBox.Text = productInfo.Price.ToString();
             StockQuantityTextBox.Text = productInfo.StockQuantity.ToString();
             SafetyStockTextBox.Text = productInfo.SafetyStock.ToString();
-            LocationTextBox.Text = productInfo.LocationName ?? "미지정";
+            LocationTextBox.Text = GetLocationName(productInfo.LocationId);
             
             // 카테고리 설정
             foreach (System.Windows.Controls.ComboBoxItem item in CategoryComboBox.Items)
@@ -293,6 +293,20 @@ namespace jujin.Views.Inventory
                 ".bmp" => "image/bmp",
                 ".gif" => "image/gif",
                 _ => "application/octet-stream"
+            };
+        }
+
+        private string GetLocationName(int locationId)
+        {
+            return locationId switch
+            {
+                1 => "A-1",
+                2 => "A-2",
+                3 => "A-3",
+                4 => "B-1",
+                5 => "B-2",
+                6 => "C-1",
+                _ => "미지정"
             };
         }
     }

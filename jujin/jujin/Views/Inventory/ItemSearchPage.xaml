@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <UserControl x:Class="jujin.Views.Inventory.ItemSearchPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -64,7 +64,6 @@
                             <DataGridTextColumn Header="가격" Binding="{Binding Price, StringFormat={}{0:#,##0}원}" Width="120"/>
                             <DataGridTextColumn Header="재고량" Binding="{Binding StockQuantity}" Width="80"/>
                             <DataGridTextColumn Header="안전재고량" Binding="{Binding SafetyStock}" Width="100"/>
-                            <DataGridTextColumn Header="창고" Binding="{Binding LocationName}" Width="80"/>
                             <DataGridTemplateColumn Header="작업" Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

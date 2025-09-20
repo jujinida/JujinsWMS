@@ -77,7 +77,13 @@ namespace jujin.Views.Inventory
                         // 필터링 적용
                         var filteredProducts = ApplyFilters(productDtos);
                         
-                        foreach (var dto in filteredProducts)
+                        // 중복된 ProductId 제거 (같은 품목코드의 첫 번째 항목만 유지)
+                        var uniqueProducts = filteredProducts
+                            .GroupBy(p => p.ProductId)
+                            .Select(g => g.First())
+                            .ToList();
+                        
+                        foreach (var dto in uniqueProducts)
                         {
                             System.Diagnostics.Debug.WriteLine($"제품: ID={dto.ProductId}, Name={dto.ProductName}, Price={dto.Price}");
                             
@@ -90,7 +96,6 @@ namespace jujin.Views.Inventory
                                 StockQuantity = dto.StockQuantity,
                                 SafetyStock = dto.SafetyStock,
                                 LocationId = dto.LocationId,
-                                LocationName = GetLocationName(dto.LocationId),
                                 ImageUrl = dto.ImageUrl
                             });
                         }
@@ -179,19 +184,6 @@ namespace jujin.Views.Inventory
             await LoadProducts();
         }
 
-        private string GetLocationName(int locationId)
-        {
-            return locationId switch
-            {
-                1 => "A-1",
-                2 => "A-2",
-                3 => "A-3",
-                4 => "B-1",
-                5 => "B-2",
-                6 => "C-1",
-                _ => "미지정"
-            };
-        }
     }
 
     // 제품 정보 클래스
@@ -204,8 +196,8 @@ namespace jujin.Views.Inventory
         public int StockQuantity { get; set; }
         public int SafetyStock { get; set; }
         public int LocationId { get; set; }
-        public string LocationName { get; set; }
         public string ImageUrl { get; set; }
+        public string Status { get; set; }
     }
 
     // 백엔드 DTO 클래스
@@ -218,7 +210,6 @@ namespace jujin.Views.Inventory
         public int StockQuantity { get; set; }
         public int SafetyStock { get; set; }
         public int LocationId { get; set; }
-        public string LocationName { get; set; }
         public string ImageUrl { get; set; }
     }
 }

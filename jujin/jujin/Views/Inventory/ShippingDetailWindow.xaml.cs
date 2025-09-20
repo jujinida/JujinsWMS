@@ -16,6 +16,7 @@ namespace jujin.Views.Inventory
         private readonly HttpClient httpClient;
         private readonly ProductInfo productInfo;
         private int selectedLocationId = 0;
+        private Dictionary<int, int> warehouseStocks = new Dictionary<int, int>();
         public event EventHandler ProductUpdated;
 
         public ShippingDetailWindow(ProductInfo product)
@@ -92,22 +93,25 @@ namespace jujin.Views.Inventory
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    var warehouseStocks = JsonSerializer.Deserialize<WarehouseStockDto[]>(json, new JsonSerializerOptions
+                    var warehouseStocksData = JsonSerializer.Deserialize<WarehouseStockDto[]>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    var stockDict = warehouseStocks?.ToDictionary(ws => ws.LocationId, ws => ws.StockQuantity) ?? new Dictionary<int, int>();
+                    warehouseStocks = warehouseStocksData?.ToDictionary(ws => ws.LocationId, ws => ws.StockQuantity) ?? new Dictionary<int, int>();
                     
-                    A1StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(1, 0)}";
-                    A2StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(2, 0)}";
-                    A3StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(3, 0)}";
-                    B1StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(4, 0)}";
-                    B2StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(5, 0)}";
-                    C1StockTextBlock.Text = $"재고: {stockDict.GetValueOrDefault(6, 0)}";
+                    A1StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(1, 0)}";
+                    A2StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(2, 0)}";
+                    A3StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(3, 0)}";
+                    B1StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(4, 0)}";
+                    B2StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(5, 0)}";
+                    C1StockTextBlock.Text = $"재고: {warehouseStocks.GetValueOrDefault(6, 0)}";
                     
-                    int totalStock = stockDict.Values.Sum();
+                    int totalStock = warehouseStocks.Values.Sum();
                     TotalStockTextBox.Text = totalStock.ToString();
+                    
+                    // 재고가 0개인 창고는 비활성화
+                    UpdateWarehouseAvailability();
                 }
                 else
                 {
@@ -123,6 +127,7 @@ namespace jujin.Views.Inventory
 
         private void SetDefaultWarehouseStock()
         {
+            warehouseStocks.Clear();
             A1StockTextBlock.Text = "재고: 0";
             A2StockTextBlock.Text = "재고: 0";
             A3StockTextBlock.Text = "재고: 0";
@@ -130,50 +135,71 @@ namespace jujin.Views.Inventory
             B2StockTextBlock.Text = "재고: 0";
             C1StockTextBlock.Text = "재고: 0";
             TotalStockTextBox.Text = "0";
+            UpdateWarehouseAvailability();
+        }
+
+        private void UpdateWarehouseAvailability()
+        {
+            // 재고가 0개인 창고는 비활성화
+            var disabledBackground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#E5E5E5"));
+            var disabledBorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCCCC"));
+            var enabledBackground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F8F9FA"));
+            var enabledBorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#D8DEE9"));
+
+            // 각 창고의 재고량에 따라 활성화/비활성화
+            A1WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(1, 0) > 0 ? enabledBackground : disabledBackground;
+            A1WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(1, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            A1WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(1, 0) > 0;
+
+            A2WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(2, 0) > 0 ? enabledBackground : disabledBackground;
+            A2WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(2, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            A2WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(2, 0) > 0;
+
+            A3WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(3, 0) > 0 ? enabledBackground : disabledBackground;
+            A3WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(3, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            A3WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(3, 0) > 0;
+
+            B1WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(4, 0) > 0 ? enabledBackground : disabledBackground;
+            B1WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(4, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            B1WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(4, 0) > 0;
+
+            B2WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(5, 0) > 0 ? enabledBackground : disabledBackground;
+            B2WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(5, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            B2WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(5, 0) > 0;
+
+            C1WarehouseBorder.Background = warehouseStocks.GetValueOrDefault(6, 0) > 0 ? enabledBackground : disabledBackground;
+            C1WarehouseBorder.BorderBrush = warehouseStocks.GetValueOrDefault(6, 0) > 0 ? enabledBorderBrush : disabledBorderBrush;
+            C1WarehouseBorder.IsEnabled = warehouseStocks.GetValueOrDefault(6, 0) > 0;
         }
 
         private void WarehouseBorder_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (sender is Border border)
+            if (sender is Border border && border.IsEnabled)
             {
+                int locationId = int.Parse(border.Tag.ToString());
+                int stockQuantity = warehouseStocks.GetValueOrDefault(locationId, 0);
+                
+                if (stockQuantity <= 0)
+                {
+                    var warehouseName = GetWarehouseName(locationId);
+                    MessageBox.Show($"{warehouseName} 창고에는 재고가 없습니다.", "재고 없음", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 ResetWarehouseBorderColors();
                 border.Background = System.Windows.Media.Brushes.White;
                 border.BorderBrush = System.Windows.Media.Brushes.Blue;
                 border.BorderThickness = new System.Windows.Thickness(2);
-                selectedLocationId = int.Parse(border.Tag.ToString());
-                var warehouseName = GetWarehouseName(selectedLocationId);
-                MessageBox.Show($"{warehouseName} 창고가 선택되었습니다.", "창고 선택", MessageBoxButton.OK, MessageBoxImage.Information);
+                selectedLocationId = locationId;
+                var selectedWarehouseName = GetWarehouseName(selectedLocationId);
+                MessageBox.Show($"{selectedWarehouseName} 창고가 선택되었습니다.\n현재 재고: {stockQuantity}개", "창고 선택", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
         private void ResetWarehouseBorderColors()
         {
-            var defaultBackground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F8F9FA"));
-            var defaultBorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#D8DEE9"));
-            
-            A1WarehouseBorder.Background = defaultBackground;
-            A1WarehouseBorder.BorderBrush = defaultBorderBrush;
-            A1WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
-            
-            A2WarehouseBorder.Background = defaultBackground;
-            A2WarehouseBorder.BorderBrush = defaultBorderBrush;
-            A2WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
-            
-            A3WarehouseBorder.Background = defaultBackground;
-            A3WarehouseBorder.BorderBrush = defaultBorderBrush;
-            A3WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
-            
-            B1WarehouseBorder.Background = defaultBackground;
-            B1WarehouseBorder.BorderBrush = defaultBorderBrush;
-            B1WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
-            
-            B2WarehouseBorder.Background = defaultBackground;
-            B2WarehouseBorder.BorderBrush = defaultBorderBrush;
-            B2WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
-            
-            C1WarehouseBorder.Background = defaultBackground;
-            C1WarehouseBorder.BorderBrush = defaultBorderBrush;
-            C1WarehouseBorder.BorderThickness = new System.Windows.Thickness(1);
+            // 창고 가용성에 따라 색상 재설정
+            UpdateWarehouseAvailability();
         }
 
         private string GetWarehouseName(int locationId)
@@ -214,17 +240,28 @@ namespace jujin.Views.Inventory
                     return;
                 }
 
+                // 선택한 창고의 재고량 확인
+                int selectedWarehouseStock = warehouseStocks.GetValueOrDefault(selectedLocationId, 0);
+                if (selectedWarehouseStock <= 0)
+                {
+                    var emptyWarehouseName = GetWarehouseName(selectedLocationId);
+                    MessageBox.Show($"{emptyWarehouseName} 창고에는 재고가 없습니다.", "재고 없음", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 선택한 창고의 재고량보다 많은 양을 출고하려고 하는지 확인
+                if (shippingQuantity > selectedWarehouseStock)
+                {
+                    var selectedWarehouseName = GetWarehouseName(selectedLocationId);
+                    MessageBox.Show($"선택한 창고의 재고가 부족합니다.\n{selectedWarehouseName} 창고 현재 재고: {selectedWarehouseStock}개\n요청 출고량: {shippingQuantity}개", 
+                                    "재고 부족", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // 현재 총 재고량 확인
                 if (!int.TryParse(TotalStockTextBox.Text, out int currentTotalStock))
                 {
                     MessageBox.Show("재고량 정보를 불러올 수 없습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (shippingQuantity > currentTotalStock)
-                {
-                    MessageBox.Show($"재고가 부족합니다.\n현재 총 재고: {currentTotalStock}개\n요청 출고량: {shippingQuantity}개", 
-                                    "재고 부족", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -233,6 +270,8 @@ namespace jujin.Views.Inventory
                 // 확인 대화상자
                 var result = MessageBox.Show($"정말로 {shippingQuantity}개를 {warehouseName} 창고에서 출고하시겠습니까?\n\n" +
                                            $"품목: {productInfo.ProductName}\n" +
+                                           $"{warehouseName} 창고 현재 재고: {selectedWarehouseStock}개\n" +
+                                           $"출고 후 {warehouseName} 창고 재고: {selectedWarehouseStock - shippingQuantity}개\n" +
                                            $"현재 총 재고: {currentTotalStock}개\n" +
                                            $"출고 후 총 재고: {currentTotalStock - shippingQuantity}개", 
                                            "출고 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);

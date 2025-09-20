@@ -159,6 +159,16 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.ProductController",
+    "Method": "GetInventoryStatus",
+    "RelativePath": "api/product/inventory-status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.ProductController",
     "Method": "GetProducts",
     "RelativePath": "api/product/list",
     "HttpMethod": "GET",

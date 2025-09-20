@@ -881,78 +881,139 @@ namespace WebApplication1.Controllers
             };
         }
 
-    }
-
-    public class ProductDto
+    [HttpGet("inventory-status")]
+    public async Task<IActionResult> GetInventoryStatus()
     {
-        public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public string Category { get; set; }
-        public decimal Price { get; set; }
-        public int StockQuantity { get; set; }
-        public int SafetyStock { get; set; }
-        public int LocationId { get; set; }
-        public string LocationName { get; set; }
-        public string ImageUrl { get; set; }
-    }
+        try
+        {
+            _logger.LogInformation("재고 현황 조회 요청");
 
-    public class ProductUpdateRequest
-    {
-        public string ProductName { get; set; }
-        public string Category { get; set; }
-        public decimal Price { get; set; }
-        public int StockQuantity { get; set; }
-        public int SafetyStock { get; set; }
-        public string ImageUrl { get; set; }
-    }
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
-    public class ProductRegistrationRequest
-    {
-        public string ProductName { get; set; }
-        public string Category { get; set; }
-        public decimal Price { get; set; }
-        public int StockQuantity { get; set; }
-        public int SafetyStock { get; set; }
-        public int LocationId { get; set; }
-        public string ImageUrl { get; set; }
-    }
+            using (var conn = new SqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
 
-    public class ProductReceiveRequest
-    {
-        public int Quantity { get; set; }
-        public int LocationId { get; set; }
-    }
+                string query = @"
+                    SELECT product_id, product_name, safety_stock, stock_quantity, category, price, pd_url
+                    FROM Products
+                    ORDER BY product_id";
 
-    public class ReceivingHistoryDto
-    {
-        public int LogId { get; set; }
-        public DateTime LogDate { get; set; }
-        public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public int QuantityChanged { get; set; }
-        public int CurrentQuantity { get; set; }
-    }
+                var inventoryStatusList = new List<InventoryStatusDto>();
 
-    public class ProductShipRequest
-    {
-        public int Quantity { get; set; }
-        public int LocationId { get; set; }
-    }
+                using (var cmd = new SqlCommand(query, conn))
+                {
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            inventoryStatusList.Add(new InventoryStatusDto
+                            {
+                                ProductId = reader.GetInt32(0),
+                                ProductName = reader.GetString(1),
+                                SafetyStock = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                                StockQuantity = reader.GetInt32(3),
+                                Category = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                Price = reader.GetDecimal(5),
+                                ImageUrl = reader.IsDBNull(6) ? null : reader.GetString(6)
+                            });
+                        }
+                    }
+                }
 
-    public class ShippingHistoryDto
-    {
-        public int LogId { get; set; }
-        public DateTime LogDate { get; set; }
-        public int ProductId { get; set; }
-        public string ProductName { get; set; }
-        public int QuantityChanged { get; set; }
-        public int CurrentQuantity { get; set; }
-    }
+                _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
 
-    public class WarehouseStockDto
-    {
-        public int LocationId { get; set; }
-        public int StockQuantity { get; set; }
+                return Ok(inventoryStatusList);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "재고 현황 조회 중 오류 발생");
+            return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+        }
     }
+}
 
+public class WarehouseStockDto
+{
+    public int LocationId { get; set; }
+    public int StockQuantity { get; set; }
+}
+
+public class InventoryStatusDto
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public string Category { get; set; }
+    public int SafetyStock { get; set; }
+    public int StockQuantity { get; set; }
+    public decimal Price { get; set; }
+    public string ImageUrl { get; set; }
+}
+
+public class ProductDto
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public string Category { get; set; }
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public int SafetyStock { get; set; }
+    public int LocationId { get; set; }
+    public string LocationName { get; set; }
+    public string ImageUrl { get; set; }
+}
+
+public class ProductUpdateRequest
+{
+    public string ProductName { get; set; }
+    public string Category { get; set; }
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public int SafetyStock { get; set; }
+    public string ImageUrl { get; set; }
+}
+
+public class ProductRegistrationRequest
+{
+    public string ProductName { get; set; }
+    public string Category { get; set; }
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public int SafetyStock { get; set; }
+    public int LocationId { get; set; }
+    public string ImageUrl { get; set; }
+}
+
+public class ProductReceiveRequest
+{
+    public int Quantity { get; set; }
+    public int LocationId { get; set; }
+}
+
+public class ProductShipRequest
+{
+    public int Quantity { get; set; }
+    public int LocationId { get; set; }
+}
+
+public class ReceivingHistoryDto
+{
+    public int LogId { get; set; }
+    public DateTime LogDate { get; set; }
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public int QuantityChanged { get; set; }
+    public int CurrentQuantity { get; set; }
+}
+
+public class ShippingHistoryDto
+{
+    public int LogId { get; set; }
+    public DateTime LogDate { get; set; }
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public int QuantityChanged { get; set; }
+    public int CurrentQuantity { get; set; }
+}
 }
