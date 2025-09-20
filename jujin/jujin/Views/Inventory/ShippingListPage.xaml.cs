@@ -58,7 +58,13 @@ namespace jujin.Views.Inventory
                         // 필터링 적용
                         var filteredProducts = ApplyFilters(productDtos);
                         
-                        foreach (var dto in filteredProducts)
+                        // 중복 제거 (같은 product_id를 가진 항목들을 하나로 합침)
+                        var uniqueProducts = filteredProducts
+                            .GroupBy(p => p.ProductId)
+                            .Select(g => g.First())
+                            .ToList();
+                        
+                        foreach (var dto in uniqueProducts)
                         {
                             products.Add(new ProductInfo
                             {

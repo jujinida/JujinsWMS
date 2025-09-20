@@ -111,6 +111,14 @@ namespace jujin.Views.HR
             var selectedVacation = VacationDataGrid.SelectedItem as VacationRequest;
             if (selectedVacation != null)
             {
+                // 이미 승인된 상태인지 확인
+                if (selectedVacation.ApprovalStatus == "승인")
+                {
+                    MessageBox.Show("이미 승인되었습니다.", "알림", 
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 var result = MessageBox.Show($"{selectedVacation.EmployeeName}님의 휴가를 승인하시겠습니까?", "휴가 승인 확인",
                     MessageBoxButton.YesNo, MessageBoxImage.Question);
 
@@ -151,6 +159,14 @@ namespace jujin.Views.HR
             var selectedVacation = VacationDataGrid.SelectedItem as VacationRequest;
             if (selectedVacation != null)
             {
+                // 이미 거부된 상태인지 확인
+                if (selectedVacation.ApprovalStatus == "거부")
+                {
+                    MessageBox.Show("이미 거부되었습니다.", "알림", 
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 var result = MessageBox.Show($"{selectedVacation.EmployeeName}님의 휴가를 거부하시겠습니까?", "휴가 거부 확인",
                     MessageBoxButton.YesNo, MessageBoxImage.Question);
 
