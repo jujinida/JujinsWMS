@@ -1,0 +1,99 @@
+<Window x:Class="jujin.Views.HR.MonthlyAttendanceCalendarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="월별 출근 기록" Height="700" Width="900"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Grid Background="#FFFFFF">
+        <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- 제목 및 년월 선택 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20,20,20,10">
+                    <TextBlock Text="월별 출근 기록" FontSize="24" FontWeight="Bold" 
+                               Foreground="#2C3E50" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="EmployeeNameText" Text="" FontSize="18" FontWeight="SemiBold"
+                               Foreground="#3498DB" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- 년월 선택 -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="20,0,20,20">
+                    <Button x:Name="PrevMonthButton" Content="◀" Width="40" Height="35"
+                            Background="#95A5A6" Foreground="White" BorderThickness="0"
+                            Click="PrevMonthButton_Click"/>
+                    <TextBlock x:Name="CurrentMonthText" Text="2024년 1월" FontSize="18" FontWeight="Bold"
+                               Foreground="#2C3E50" Margin="20,0" VerticalAlignment="Center"/>
+                    <Button x:Name="NextMonthButton" Content="▶" Width="40" Height="35"
+                            Background="#95A5A6" Foreground="White" BorderThickness="0"
+                            Click="NextMonthButton_Click"/>
+                </StackPanel>
+                
+                <!-- 달력 그리드 -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="20,0,20,20">
+                    <Grid x:Name="CalendarGrid" Background="#F8F9FA">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- 요일 헤더 -->
+                        <Border Grid.Row="0" Grid.Column="0" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="일" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="1" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="월" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="2" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="화" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="3" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="수" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="4" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="목" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="5" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="금" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                        <Border Grid.Row="0" Grid.Column="6" Background="#E9ECEF" BorderBrush="#DEE2E6" BorderThickness="1">
+                            <TextBlock Text="토" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontWeight="Bold" Padding="10"/>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+                
+                <!-- 하단 버튼 -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,20">
+                    <Button Content="닫기" Width="80" Height="35"
+                            Background="#95A5A6" Foreground="White" BorderThickness="0"
+                            Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

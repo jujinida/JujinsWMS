@@ -129,6 +129,128 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [HttpGet("attendance-records")]
+        public async Task<IActionResult> GetAttendanceRecords([FromQuery] string? date = null)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                // 날짜가 제공되지 않으면 오늘 날짜 사용
+                string targetDate = string.IsNullOrEmpty(date) ? "CONVERT(DATE,GETDATE())" : $"'{date}'";
+
+                string query = $@"
+                    SELECT 
+                        E.employee_idx, 
+                        E.employee_name, 
+                        E.department_id, 
+                        E.position, 
+                        A.check_in_time, 
+                        A.check_out_time, 
+                        A.work_hours, 
+                        A.work_minutes, 
+                        S.late_count, 
+                        S.absent_without_leave_count
+                    FROM Employees E 
+                    LEFT JOIN Attendance_Records A ON E.employee_idx = A.employee_idx 
+                    LEFT JOIN Attendance_Summary S ON A.employee_idx = S.employee_idx
+                    WHERE A.record_date = {targetDate}
+                    ORDER BY E.employee_idx";
+
+                using var cmd = new SqlCommand(query, conn);
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                var attendanceRecords = new List<AttendanceRecordDto>();
+                while (await reader.ReadAsync())
+                {
+                    var record = new AttendanceRecordDto();
+                    
+                    // 각 필드를 안전하게 읽기
+                    record.EmployeeId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                    record.EmployeeName = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    record.DepartmentId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
+                    record.Position = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    record.CheckInTime = reader.IsDBNull(4) ? "" : reader.GetDateTime(4).ToString("HH:mm");
+                    record.CheckOutTime = reader.IsDBNull(5) ? "" : reader.GetDateTime(5).ToString("HH:mm");
+                    record.WorkHours = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
+                    record.WorkMinutes = reader.IsDBNull(7) ? 0 : reader.GetInt32(7);
+                    record.LateCount = reader.IsDBNull(8) ? 0 : reader.GetInt32(8);
+                    record.AbsentWithoutLeaveCount = reader.IsDBNull(9) ? 0 : reader.GetInt32(9);
+                    
+                    attendanceRecords.Add(record);
+                }
+
+                return Ok(attendanceRecords);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"출근 기록 조회 중 오류가 발생했습니다: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("attendance-records/{employeeId}/monthly")]
+        public async Task<IActionResult> GetMonthlyAttendanceRecords(int employeeId, [FromQuery] string? yearMonth = null)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                // 년월이 제공되지 않으면 현재 년월 사용
+                DateTime targetDate = string.IsNullOrEmpty(yearMonth) ? DateTime.Now : DateTime.Parse($"{yearMonth}-01");
+                string startDate = targetDate.ToString("yyyy-MM-01");
+                string endDate = targetDate.AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd");
+
+                string query = $@"
+                    SELECT 
+                        A.record_date,
+                        A.check_in_time, 
+                        A.check_out_time, 
+                        A.work_hours, 
+                        A.work_minutes,
+                        CASE 
+                            WHEN A.check_in_time IS NULL AND A.check_out_time IS NULL THEN '결근'
+                            WHEN CAST(A.check_in_time AS TIME) > CAST('09:01:00' AS TIME) THEN '지각'
+                            ELSE '정상'
+                        END as attendance_status,
+                        CAST(A.check_in_time AS TIME) as check_in_time_only
+                    FROM Attendance_Records A
+                    WHERE A.employee_idx = @EmployeeId 
+                    AND A.record_date BETWEEN '{startDate}' AND '{endDate}'
+                    ORDER BY A.record_date";
+
+                using var cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                var monthlyRecords = new List<MonthlyAttendanceRecordDto>();
+                while (await reader.ReadAsync())
+                {
+                    var record = new MonthlyAttendanceRecordDto();
+                    
+                    record.RecordDate = reader.IsDBNull(0) ? "" : reader.GetDateTime(0).ToString("yyyy-MM-dd");
+                    record.CheckInTime = reader.IsDBNull(1) ? "" : reader.GetDateTime(1).ToString("HH:mm");
+                    record.CheckOutTime = reader.IsDBNull(2) ? "" : reader.GetDateTime(2).ToString("HH:mm");
+                    record.WorkHours = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
+                    record.WorkMinutes = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
+                    record.AttendanceStatus = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    
+                    // 디버깅을 위한 로그 - 원본 시간 값도 확인
+                    var originalTime = reader.IsDBNull(6) ? "" : reader.GetTimeSpan(6).ToString(@"hh\:mm");
+                    _logger.LogInformation($"출근 기록 - 날짜: {record.RecordDate}, 출근시간: {record.CheckInTime}, 원본시간: {originalTime}, 상태: {record.AttendanceStatus}");
+                    
+                    monthlyRecords.Add(record);
+                }
+
+                return Ok(monthlyRecords);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"월별 출근 기록 조회 중 오류가 발생했습니다: {ex.Message}" });
+            }
+        }
+
         [HttpPost("register")]
         public async Task<IActionResult> RegisterEmployee([FromBody] EmployeeRegistrationRequest request)
         {
@@ -206,6 +328,30 @@ namespace WebApplication1.Controllers
         public int DepartmentId { get; set; }
         public int Salary { get; set; }
         public string ProfileUrl { get; set; }
+    }
+
+    public class AttendanceRecordDto
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public int DepartmentId { get; set; }
+        public string Position { get; set; }
+        public string CheckInTime { get; set; }
+        public string CheckOutTime { get; set; }
+        public int WorkHours { get; set; }
+        public int WorkMinutes { get; set; }
+        public int LateCount { get; set; }
+        public int AbsentWithoutLeaveCount { get; set; }
+    }
+
+    public class MonthlyAttendanceRecordDto
+    {
+        public string RecordDate { get; set; }
+        public string CheckInTime { get; set; }
+        public string CheckOutTime { get; set; }
+        public int WorkHours { get; set; }
+        public int WorkMinutes { get; set; }
+        public string AttendanceStatus { get; set; }
     }
 
     public class EmployeeRegistrationRequest

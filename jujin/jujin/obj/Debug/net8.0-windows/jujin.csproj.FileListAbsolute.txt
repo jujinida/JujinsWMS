@@ -137,3 +137,5 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingListPage.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingDetailWindow.g.cs
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingListPage.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthlyAttendanceCalendarWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthlyAttendanceCalendarWindow.g.cs

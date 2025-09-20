@@ -17,6 +17,43 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "GetAttendanceRecords",
+    "RelativePath": "api/HR/attendance-records",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "date",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "GetMonthlyAttendanceRecords",
+    "RelativePath": "api/HR/attendance-records/{employeeId}/monthly",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employeeId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "yearMonth",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
     "Method": "GetEmployees",
     "RelativePath": "api/HR/employees",
     "HttpMethod": "GET",
