@@ -92,7 +92,7 @@ namespace jujin.Views.Auth
                     SaveUserIdIfChecked(userId);
                     
                     // 결과 객체에서 Token과 UserInfo 사용
-                    MessageBox.Show($"로그인 성공! 토큰: { result.Token}\n사용자 이름 : {result.UserInfo.Profile_Url}");
+                    MessageBox.Show("로그인 성공!");
                     // Main 화면으로 이동 (예시)
                     // (사용자 정보를 다음 화면으로 전달할 수 있음)
                     var main = new MainScreenWindow(result.UserInfo); 

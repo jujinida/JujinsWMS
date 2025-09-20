@@ -4,7 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         Title="급여 기록" Height="900" Width="1200"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">
     <Grid Background="#FFFFFF">
         <Border BorderBrush="#BDC3C7" BorderThickness="2" CornerRadius="5" Margin="20">

@@ -10,6 +10,8 @@ namespace jujin.Views.HR
         public HRManagementPage()
         {
             InitializeComponent();
+            // 기본적으로 직원 기본 정보 관리 페이지 표시
+            ShowEmployeeManagement();
         }
 
         // 메뉴 버튼 이벤트 핸들러들
