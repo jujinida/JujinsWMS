@@ -100,6 +100,48 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "GetVacationRequests",
+    "RelativePath": "api/HR/vacation-requests",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "ApproveVacationRequest",
+    "RelativePath": "api/HR/vacation-requests/{requestId}/approve",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "RejectVacationRequest",
+    "RelativePath": "api/HR/vacation-requests/{requestId}/reject",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "requestId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "WebApplication1.Controllers.ProductController",
     "Method": "GetProducts",
     "RelativePath": "api/product/list",

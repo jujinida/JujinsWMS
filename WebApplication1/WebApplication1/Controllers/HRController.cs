@@ -313,6 +313,218 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, new { message = $"직원 등록 중 오류가 발생했습니다: {ex.Message}" });
             }
         }
+
+        [HttpGet("vacation-requests")]
+        public async Task<IActionResult> GetVacationRequests()
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                string query = @"
+                    SELECT 
+                        V.request_id,
+                        E.employee_idx, 
+                        E.employee_name, 
+                        E.department_id, 
+                        E.position, 
+                        V.reason, 
+                        V.start_date, 
+                        V.end_date, 
+                        V.vacation_days, 
+                        V.is_half_day, 
+                        E.remaining_vacation_days, 
+                        E.total_vacation_days, 
+                        V.approval_status
+                    FROM Employees E 
+                    LEFT JOIN Vacation_Requests V ON E.employee_idx = V.employee_idx
+                    ORDER BY E.employee_idx";
+
+                using var cmd = new SqlCommand(query, conn);
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                var vacationRequests = new List<VacationRequestDto>();
+
+                while (await reader.ReadAsync())
+                {
+                    var vacationRequest = new VacationRequestDto
+                    {
+                        RequestId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                        EmployeeId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                        EmployeeName = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                        DepartmentId = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
+                        Position = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                        Reason = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                        StartDate = reader.IsDBNull(6) ? "" : reader.GetDateTime(6).ToString("yyyy-MM-dd"),
+                        EndDate = reader.IsDBNull(7) ? "" : reader.GetDateTime(7).ToString("yyyy-MM-dd"),
+                        VacationDays = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                        IsHalfDay = reader.IsDBNull(9) ? false : reader.GetBoolean(9),
+                        RemainingVacationDays = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                        TotalVacationDays = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                        ApprovalStatus = reader.IsDBNull(12) ? "" : reader.GetString(12)
+                    };
+
+                    vacationRequests.Add(vacationRequest);
+                }
+
+                return Ok(vacationRequests);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "휴가 신청 목록을 가져오는 중 오류가 발생했습니다.");
+                return StatusCode(500, "서버 오류가 발생했습니다.");
+            }
+        }
+
+        [HttpPut("vacation-requests/{requestId}/approve")]
+        public async Task<IActionResult> ApproveVacationRequest(int requestId)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                // 트랜잭션 시작
+                using var transaction = conn.BeginTransaction();
+
+                try
+                {
+                    // 휴가 신청 정보 조회
+                    string selectQuery = @"
+                        SELECT employee_idx, vacation_days, approval_status 
+                        FROM Vacation_Requests 
+                        WHERE request_id = @RequestId";
+
+                    using var selectCmd = new SqlCommand(selectQuery, conn, transaction);
+                    selectCmd.Parameters.AddWithValue("@RequestId", requestId);
+
+                    using var reader = await selectCmd.ExecuteReaderAsync();
+                    if (!await reader.ReadAsync())
+                    {
+                        return NotFound("휴가 신청을 찾을 수 없습니다.");
+                    }
+
+                    int employeeIdx = reader.GetInt32(0);
+                    decimal vacationDays = reader.GetDecimal(1);
+                    string currentStatus = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    
+                    reader.Close();
+
+                    // 승인 상태 업데이트
+                    string updateVacationQuery = @"
+                        UPDATE Vacation_Requests 
+                        SET approval_status = '승인' 
+                        WHERE request_id = @RequestId";
+
+                    using var updateVacationCmd = new SqlCommand(updateVacationQuery, conn, transaction);
+                    updateVacationCmd.Parameters.AddWithValue("@RequestId", requestId);
+                    await updateVacationCmd.ExecuteNonQueryAsync();
+
+                    // 잔여 휴가일수 차감
+                    string updateEmployeeQuery = @"
+                        UPDATE Employees 
+                        SET remaining_vacation_days = remaining_vacation_days - @VacationDays 
+                        WHERE employee_idx = @EmployeeIdx";
+
+                    using var updateEmployeeCmd = new SqlCommand(updateEmployeeQuery, conn, transaction);
+                    updateEmployeeCmd.Parameters.AddWithValue("@VacationDays", vacationDays);
+                    updateEmployeeCmd.Parameters.AddWithValue("@EmployeeIdx", employeeIdx);
+                    await updateEmployeeCmd.ExecuteNonQueryAsync();
+
+                    // 트랜잭션 커밋
+                    transaction.Commit();
+
+                    return Ok(new { message = "휴가가 승인되었습니다." });
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "휴가 승인 중 오류가 발생했습니다.");
+                return StatusCode(500, "휴가 승인 중 오류가 발생했습니다.");
+            }
+        }
+
+        [HttpPut("vacation-requests/{requestId}/reject")]
+        public async Task<IActionResult> RejectVacationRequest(int requestId)
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                // 트랜잭션 시작
+                using var transaction = conn.BeginTransaction();
+
+                try
+                {
+                    // 휴가 신청 정보 조회
+                    string selectQuery = @"
+                        SELECT employee_idx, vacation_days, approval_status 
+                        FROM Vacation_Requests 
+                        WHERE request_id = @RequestId";
+
+                    using var selectCmd = new SqlCommand(selectQuery, conn, transaction);
+                    selectCmd.Parameters.AddWithValue("@RequestId", requestId);
+
+                    using var reader = await selectCmd.ExecuteReaderAsync();
+                    if (!await reader.ReadAsync())
+                    {
+                        return NotFound("휴가 신청을 찾을 수 없습니다.");
+                    }
+
+                    int employeeIdx = reader.GetInt32(0);
+                    decimal vacationDays = reader.GetDecimal(1);
+                    string currentStatus = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    
+                    reader.Close();
+
+                    // 승인 상태를 거부로 업데이트
+                    string updateVacationQuery = @"
+                        UPDATE Vacation_Requests 
+                        SET approval_status = '거부' 
+                        WHERE request_id = @RequestId";
+
+                    using var updateVacationCmd = new SqlCommand(updateVacationQuery, conn, transaction);
+                    updateVacationCmd.Parameters.AddWithValue("@RequestId", requestId);
+                    await updateVacationCmd.ExecuteNonQueryAsync();
+
+                    // 이전 상태가 승인이었다면 잔여 휴가일수 복원
+                    if (currentStatus == "승인")
+                    {
+                        string updateEmployeeQuery = @"
+                            UPDATE Employees 
+                            SET remaining_vacation_days = remaining_vacation_days + @VacationDays 
+                            WHERE employee_idx = @EmployeeIdx";
+
+                        using var updateEmployeeCmd = new SqlCommand(updateEmployeeQuery, conn, transaction);
+                        updateEmployeeCmd.Parameters.AddWithValue("@VacationDays", vacationDays);
+                        updateEmployeeCmd.Parameters.AddWithValue("@EmployeeIdx", employeeIdx);
+                        await updateEmployeeCmd.ExecuteNonQueryAsync();
+                    }
+
+                    // 트랜잭션 커밋
+                    transaction.Commit();
+
+                    return Ok(new { message = "휴가가 거부되었습니다." });
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "휴가 거부 중 오류가 발생했습니다.");
+                return StatusCode(500, "휴가 거부 중 오류가 발생했습니다.");
+            }
+        }
     }
 
     public class EmployeeDto
@@ -366,5 +578,22 @@ namespace WebApplication1.Controllers
         public int DepartmentId { get; set; }
         public int Salary { get; set; }
         public string ProfileUrl { get; set; }
+    }
+
+    public class VacationRequestDto
+    {
+        public int RequestId { get; set; }
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public int DepartmentId { get; set; }
+        public string Position { get; set; }
+        public string Reason { get; set; }
+        public string StartDate { get; set; }
+        public string EndDate { get; set; }
+        public decimal VacationDays { get; set; }
+        public bool IsHalfDay { get; set; }
+        public decimal RemainingVacationDays { get; set; }
+        public int TotalVacationDays { get; set; }
+        public string ApprovalStatus { get; set; }
     }
 }

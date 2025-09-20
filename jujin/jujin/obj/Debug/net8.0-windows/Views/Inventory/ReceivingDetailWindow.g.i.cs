@@ -132,7 +132,7 @@ namespace jujin.Views.Inventory {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/jujin;V1.0.0.0;component/views/inventory/receivingdetailwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/jujin;component/views/inventory/receivingdetailwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\Views\Inventory\ReceivingDetailWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

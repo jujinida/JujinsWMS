@@ -172,6 +172,64 @@
         }
       }
     },
+    "/api/HR/vacation-requests": {
+      "get": {
+        "tags": [
+          "HR"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HR/vacation-requests/{requestId}/approve": {
+      "put": {
+        "tags": [
+          "HR"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HR/vacation-requests/{requestId}/reject": {
+      "put": {
+        "tags": [
+          "HR"
+        ],
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/product/list": {
       "get": {
         "tags": [

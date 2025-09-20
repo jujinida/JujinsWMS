@@ -73,7 +73,8 @@
                             <DataGridTextColumn Header="휴가 시작일" Binding="{Binding StartDate}" Width="100"/>
                             <DataGridTextColumn Header="휴가 종료일" Binding="{Binding EndDate}" Width="100"/>
                             <DataGridTextColumn Header="휴가 일수" Binding="{Binding VacationDays}" Width="80"/>
-                            <DataGridTextColumn Header="잔여 휴가일수" Binding="{Binding RemainingDays}" Width="100"/>
+                            <DataGridTextColumn Header="총 연차일수" Binding="{Binding TotalVacationDays}" Width="100"/>
+                            <DataGridTextColumn Header="잔여 연차일수" Binding="{Binding RemainingVacationDays}" Width="100"/>
                             <DataGridTextColumn Header="승인여부" Binding="{Binding ApprovalStatus}" Width="80"/>
                             <DataGridTemplateColumn Header="작업" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
