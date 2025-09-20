@@ -27,7 +27,7 @@ C#, WPF, ASP.Net, AWS S3
   + 급여관리
 
 # 프로젝트 아키텍쳐
-![시스템아키텍처](https://github.com/2025-SMHRD-SW-BigData/DevMour/blob/master/%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true)
+![시스템아키텍처](https://github.com/jujinida/JujinsWMS/blob/master/%EC%8B%9C%EC%8A%A4%ED%85%9C%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98.jpg?raw=true)
 
 # 시연영상
 [https://youtu.be/XOwyCXsngZ0]
