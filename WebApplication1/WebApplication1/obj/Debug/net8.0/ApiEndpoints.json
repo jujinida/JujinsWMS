@@ -159,6 +159,27 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.ProductController",
+    "Method": "GetInventoryStatistics",
+    "RelativePath": "api/product/inventory-statistics",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "category",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.ProductController",
     "Method": "GetInventoryStatus",
     "RelativePath": "api/product/inventory-status",
     "HttpMethod": "GET",
@@ -240,6 +261,22 @@
       {
         "Name": "request",
         "Type": "WebApplication1.Controllers.ProductRegistrationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.ProductController",
+    "Method": "GetSalesTrend",
+    "RelativePath": "api/product/sales-trend/{productId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],

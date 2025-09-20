@@ -147,3 +147,5 @@ C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\LiveCharts.dll
 C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\LiveCharts.Wpf.dll
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\InventoryDetailWindow.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\InventoryDetailWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\SalesTrendWindow.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\SalesTrendWindow.g.cs

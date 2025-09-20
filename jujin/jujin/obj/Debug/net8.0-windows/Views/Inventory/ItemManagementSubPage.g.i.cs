@@ -76,7 +76,7 @@ namespace jujin.Views.Inventory {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/jujin;component/views/inventory/itemmanagementsubpage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/jujin;V1.0.0.0;component/views/inventory/itemmanagementsubpage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\Views\Inventory\ItemManagementSubPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

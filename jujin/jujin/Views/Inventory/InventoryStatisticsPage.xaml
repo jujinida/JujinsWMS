@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <UserControl x:Class="jujin.Views.Inventory.InventoryStatisticsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -30,29 +30,22 @@
                     
                     <TextBlock Grid.Column="0" Text="품목명:" VerticalAlignment="Center" 
                                Margin="0,0,10,0" FontWeight="SemiBold"/>
-                    <TextBox Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    <TextBox Grid.Column="1" x:Name="ProductNameTextBox" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
                     
                     <TextBlock Grid.Column="2" Text="카테고리:" VerticalAlignment="Center" 
                                Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="3" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                    <ComboBox Grid.Column="3" x:Name="CategoryComboBox" Height="35" VerticalContentAlignment="Center" Padding="10,0">
                         <ComboBoxItem Content="전체"/>
-                        <ComboBoxItem Content="원자재"/>
-                        <ComboBoxItem Content="완제품"/>
-                        <ComboBoxItem Content="반제품"/>
-                        <ComboBoxItem Content="소모품"/>
+                        <ComboBoxItem Content="주류"/>
+                        <ComboBoxItem Content="음료"/>
+                        <ComboBoxItem Content="기타"/>                        
                     </ComboBox>
                     
-                    <TextBlock Grid.Column="4" Text="기간:" VerticalAlignment="Center" 
-                               Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
-                        <ComboBoxItem Content="최근 1개월"/>
-                        <ComboBoxItem Content="최근 3개월"/>
-                        <ComboBoxItem Content="최근 6개월"/>
-                        <ComboBoxItem Content="최근 1년"/>
-                    </ComboBox>
+                    
                     
                     <Button Grid.Column="7" Content="검색" Width="80" Height="35"
-                            Background="#5E81AC" Foreground="White" BorderThickness="0"/>
+                            Background="#5E81AC" Foreground="White" BorderThickness="0"
+                            Click="SearchButton_Click"/>
                 </Grid>
                 
                 <!-- 결과 테이블 -->
@@ -66,12 +59,10 @@
                             <DataGridTextColumn Header="품목코드" Binding="{Binding ItemCode}" Width="100"/>
                             <DataGridTextColumn Header="품목명" Binding="{Binding ItemName}" Width="150"/>
                             <DataGridTextColumn Header="카테고리" Binding="{Binding Category}" Width="100"/>
-                            <DataGridTextColumn Header="일별 증감율" Binding="{Binding DailyChangeRate}" Width="100"/>
-                            <DataGridTextColumn Header="월별 증감율" Binding="{Binding MonthlyChangeRate}" Width="100"/>
-                            <DataGridTextColumn Header="분기별 증감율" Binding="{Binding QuarterlyChangeRate}" Width="100"/>
-                            <DataGridTextColumn Header="현재고" Binding="{Binding CurrentStock}" Width="80"/>
-                            <DataGridTextColumn Header="안전재고량" Binding="{Binding SafetyStock}" Width="100"/>
-                            <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="80"/>
+                            <DataGridTextColumn Header="재고회전율" Binding="{Binding DailyChangeRate}" Width="100"/>
+                            <DataGridTextColumn Header="재고소진지수" Binding="{Binding MonthlyChangeRate}" Width="120"/>
+                            <DataGridTextColumn Header="월매출량" Binding="{Binding QuarterlyChangeRate}" Width="100"/>
+                            
                             <DataGridTemplateColumn Header="작업" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

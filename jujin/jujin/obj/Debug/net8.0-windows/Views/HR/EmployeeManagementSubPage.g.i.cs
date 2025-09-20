@@ -76,7 +76,7 @@ namespace jujin.Views.HR {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/jujin;component/views/hr/employeemanagementsubpage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/jujin;V1.0.0.0;component/views/hr/employeemanagementsubpage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\Views\HR\EmployeeManagementSubPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

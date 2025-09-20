@@ -881,57 +881,229 @@ namespace WebApplication1.Controllers
             };
         }
 
-    [HttpGet("inventory-status")]
-    public async Task<IActionResult> GetInventoryStatus()
-    {
-        try
+        [HttpGet("inventory-status")]
+        public async Task<IActionResult> GetInventoryStatus()
         {
-            _logger.LogInformation("재고 현황 조회 요청");
-
-            string connectionString = _configuration.GetConnectionString("DefaultConnection");
-
-            using (var conn = new SqlConnection(connectionString))
+            try
             {
-                await conn.OpenAsync();
+                _logger.LogInformation("재고 현황 조회 요청");
 
-                string query = @"
-                    SELECT product_id, product_name, safety_stock, stock_quantity, category, price, pd_url
-                    FROM Products
-                    ORDER BY product_id";
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
 
-                var inventoryStatusList = new List<InventoryStatusDto>();
-
-                using (var cmd = new SqlCommand(query, conn))
+                using (var conn = new SqlConnection(connectionString))
                 {
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    await conn.OpenAsync();
+
+                    string query = @"
+                        SELECT product_id, product_name, safety_stock, stock_quantity, category, price, pd_url
+                        FROM Products
+                        ORDER BY product_id";
+
+                    var inventoryStatusList = new List<InventoryStatusDto>();
+
+                    using (var cmd = new SqlCommand(query, conn))
                     {
-                        while (await reader.ReadAsync())
+                        using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            inventoryStatusList.Add(new InventoryStatusDto
+                            while (await reader.ReadAsync())
                             {
-                                ProductId = reader.GetInt32(0),
-                                ProductName = reader.GetString(1),
-                                SafetyStock = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                                StockQuantity = reader.GetInt32(3),
-                                Category = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                Price = reader.GetDecimal(5),
-                                ImageUrl = reader.IsDBNull(6) ? null : reader.GetString(6)
-                            });
+                                inventoryStatusList.Add(new InventoryStatusDto
+                                {
+                                    ProductId = reader.GetInt32(0),
+                                    ProductName = reader.GetString(1),
+                                    SafetyStock = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                                    StockQuantity = reader.GetInt32(3),
+                                    Category = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                    Price = reader.GetDecimal(5),
+                                    ImageUrl = reader.IsDBNull(6) ? null : reader.GetString(6)
+                                });
+                            }
                         }
                     }
+
+                    _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
+
+                    return Ok(inventoryStatusList);
                 }
-
-                _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
-
-                return Ok(inventoryStatusList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "재고 현황 조회 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
             }
         }
-        catch (Exception ex)
+
+        [HttpGet("inventory-statistics")]
+        public async Task<IActionResult> GetInventoryStatistics([FromQuery] string? productName = null, [FromQuery] string? category = null)
         {
-            _logger.LogError(ex, "재고 현황 조회 중 오류 발생");
-            return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            try
+            {
+                _logger.LogInformation("재고 통계 조회 요청: ProductName={ProductName}, Category={Category}", productName, category);
+
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    string query = @"
+                        WITH MonthlySales AS (
+                            -- 1. 각 품목별 9월 월간 판매량 및 매출액 계산
+                            SELECT
+                                product_id,
+                                SUM(quantity) AS monthly_sales_volume, -- 월 매출량
+                                SUM(quantity * sale_price) AS total_monthly_revenue -- 총 월 매출액 (재고 회전율 계산에 사용)
+                            FROM
+                                Sales
+                            WHERE
+                                sale_date BETWEEN '2025-09-01' AND '2025-09-30'
+                            GROUP BY
+                                product_id
+                        ),
+                        AverageInventory AS (
+                            -- 2. 각 품목별 8월 말, 9월 말 재고액을 이용한 평균 재고액 계산
+                            SELECT
+                                product_id,
+                                AVG(end_of_period_value) AS average_inventory_value -- 평균 재고액
+                            FROM
+                                InventorySummary
+                            WHERE
+                                period_date IN ('2025-08-31', '2025-09-30')
+                            GROUP BY
+                                product_id
+                        )
+                        -- 3. 모든 CTE와 Products 테이블을 JOIN하여 최종 지표 계산
+                        SELECT
+                            p.product_id AS 품목코드,
+                            p.product_name AS 품목명,
+                            p.category AS 카테고리,
+                            -- 재고 회전율: 총 매출액 / 평균 재고액
+                            -- 재고액은 제품 가격으로 환산되어 있으므로 매출액을 사용합니다.
+                            (ms.total_monthly_revenue / ai.average_inventory_value) AS 재고_회전율,
+                            -- 재고 소진 지수: 월 매출량 / 안전재고량
+                            -- 1 이상이면 안전재고량을 초과하여 판매된 것이므로, 재고 부족 가능성이 높다는 의미
+                            CAST(ms.monthly_sales_volume AS DECIMAL(18, 2)) / p.safety_stock AS 재고_소진_지수,
+                            ms.monthly_sales_volume AS 월매출량
+                        FROM
+                            Products AS p
+                        JOIN
+                            MonthlySales AS ms ON p.product_id = ms.product_id
+                        JOIN
+                            AverageInventory AS ai ON p.product_id = ai.product_id
+                        WHERE
+                            1=1";
+
+                    var parameters = new List<SqlParameter>();
+
+                    // 품목명 검색 조건 추가
+                    if (!string.IsNullOrEmpty(productName))
+                    {
+                        query += " AND p.product_name LIKE @productName";
+                        parameters.Add(new SqlParameter("@productName", $"%{productName}%"));
+                    }
+
+                    // 카테고리 검색 조건 추가
+                    if (!string.IsNullOrEmpty(category) && category != "전체")
+                    {
+                        query += " AND p.category = @category";
+                        parameters.Add(new SqlParameter("@category", category));
+                    }
+
+                    query += " ORDER BY p.product_id";
+
+                    var statisticsList = new List<InventoryStatisticsDto>();
+
+                    using (var cmd = new SqlCommand(query, conn))
+                    {
+                        // 매개변수 추가
+                        foreach (var param in parameters)
+                        {
+                            cmd.Parameters.Add(param);
+                        }
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                statisticsList.Add(new InventoryStatisticsDto
+                                {
+                                    ProductId = reader.GetInt32(0),
+                                    ProductName = reader.GetString(1),
+                                    Category = reader.IsDBNull(2) ? null : reader.GetString(2),
+                                    InventoryTurnoverRate = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
+                                    InventoryDepletionIndex = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                                    MonthlySalesVolume = reader.GetInt32(5)
+                                });
+                            }
+                        }
+                    }
+
+                    _logger.LogInformation("재고 통계 조회 완료: {Count}개 항목", statisticsList.Count);
+
+                    return Ok(statisticsList);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "재고 통계 조회 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            }
         }
-    }
+
+        [HttpGet("sales-trend/{productId}")]
+        public async Task<IActionResult> GetSalesTrend(int productId)
+        {
+            try
+            {
+                _logger.LogInformation("제품 판매 추이 조회 요청: ProductId={ProductId}", productId);
+
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    await conn.OpenAsync();
+
+                    string query = @"
+                        SELECT 
+                            DATEPART(DAY, sale_date) AS DayOfMonth,
+                            SUM(quantity) AS DailySales
+                        FROM Sales 
+                        WHERE product_id = @productId 
+                            AND sale_date >= DATEADD(MONTH, -1, GETDATE())
+                            AND sale_date < GETDATE()
+                        GROUP BY DATEPART(DAY, sale_date)
+                        ORDER BY DayOfMonth";
+
+                    var salesTrendList = new List<SalesTrendDto>();
+
+                    using (var cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@productId", productId);
+                        
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                salesTrendList.Add(new SalesTrendDto
+                                {
+                                    DayOfMonth = reader.GetInt32(0),
+                                    DailySales = reader.GetInt32(1)
+                                });
+                            }
+                        }
+                    }
+
+                    _logger.LogInformation("제품 판매 추이 조회 완료: ProductId={ProductId}, {Count}개 일자", productId, salesTrendList.Count);
+
+                    return Ok(salesTrendList);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "제품 판매 추이 조회 중 오류 발생: ProductId={ProductId}", productId);
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            }
+        }
 }
 
 public class WarehouseStockDto
@@ -949,6 +1121,22 @@ public class InventoryStatusDto
     public int StockQuantity { get; set; }
     public decimal Price { get; set; }
     public string ImageUrl { get; set; }
+}
+
+public class InventoryStatisticsDto
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; }
+    public string Category { get; set; }
+    public decimal InventoryTurnoverRate { get; set; }
+    public decimal InventoryDepletionIndex { get; set; }
+    public int MonthlySalesVolume { get; set; }
+}
+
+public class SalesTrendDto
+{
+    public int DayOfMonth { get; set; }
+    public int DailySales { get; set; }
 }
 
 public class ProductDto

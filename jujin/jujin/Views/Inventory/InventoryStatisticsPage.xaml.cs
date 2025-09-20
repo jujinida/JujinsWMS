@@ -1,5 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,28 +10,103 @@ namespace jujin.Views.Inventory
 {
     public partial class InventoryStatisticsPage : UserControl
     {
+        private readonly HttpClient httpClient;
+        private ObservableCollection<InventoryStatistics> statisticsItems;
+
         public InventoryStatisticsPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            httpClient = new HttpClient();
+            statisticsItems = new ObservableCollection<InventoryStatistics>();
+            StatisticsDataGrid.ItemsSource = statisticsItems;
+            LoadStatisticsData();
         }
 
-        private void LoadSampleData()
+        private async void LoadStatisticsData(string? productName = null, string? category = null)
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var sampleStatistics = new ObservableCollection<InventoryStatistics>
+            try
             {
-                new InventoryStatistics { ItemCode = "ITEM001", ItemName = "스마트폰", Category = "완제품", DailyChangeRate = "+5.2%", MonthlyChangeRate = "+12.8%", QuarterlyChangeRate = "+25.4%", CurrentStock = 120, SafetyStock = 50, Status = "정상" },
-                new InventoryStatistics { ItemCode = "ITEM002", ItemName = "배터리", Category = "원자재", DailyChangeRate = "-2.1%", MonthlyChangeRate = "-8.5%", QuarterlyChangeRate = "-15.2%", CurrentStock = 45, SafetyStock = 100, Status = "부족" },
-                new InventoryStatistics { ItemCode = "ITEM003", ItemName = "LCD패널", Category = "원자재", DailyChangeRate = "+1.8%", MonthlyChangeRate = "+3.2%", QuarterlyChangeRate = "+8.7%", CurrentStock = 15, SafetyStock = 20, Status = "부족" },
-                new InventoryStatistics { ItemCode = "ITEM004", ItemName = "케이스", Category = "소모품", DailyChangeRate = "+8.5%", MonthlyChangeRate = "+18.2%", QuarterlyChangeRate = "+32.1%", CurrentStock = 350, SafetyStock = 200, Status = "정상" },
-                new InventoryStatistics { ItemCode = "ITEM005", ItemName = "충전기", Category = "소모품", DailyChangeRate = "+2.3%", MonthlyChangeRate = "+6.8%", QuarterlyChangeRate = "+14.5%", CurrentStock = 95, SafetyStock = 80, Status = "정상" },
-                new InventoryStatistics { ItemCode = "ITEM006", ItemName = "메인보드", Category = "원자재", DailyChangeRate = "-1.5%", MonthlyChangeRate = "-5.2%", QuarterlyChangeRate = "-12.8%", CurrentStock = 25, SafetyStock = 30, Status = "부족" },
-                new InventoryStatistics { ItemCode = "ITEM007", ItemName = "RAM", Category = "원자재", DailyChangeRate = "+3.7%", MonthlyChangeRate = "+9.1%", QuarterlyChangeRate = "+18.3%", CurrentStock = 65, SafetyStock = 50, Status = "정상" },
-                new InventoryStatistics { ItemCode = "ITEM008", ItemName = "SSD", Category = "원자재", DailyChangeRate = "-0.8%", MonthlyChangeRate = "-2.1%", QuarterlyChangeRate = "-6.5%", CurrentStock = 38, SafetyStock = 40, Status = "부족" }
-            };
+                // URL에 검색 조건 추가
+                var url = "http://localhost:5185/api/product/inventory-statistics";
+                var queryParams = new List<string>();
+                
+                if (!string.IsNullOrEmpty(productName))
+                {
+                    queryParams.Add($"productName={Uri.EscapeDataString(productName)}");
+                }
+                
+                if (!string.IsNullOrEmpty(category) && category != "전체")
+                {
+                    queryParams.Add($"category={Uri.EscapeDataString(category)}");
+                }
+                
+                if (queryParams.Count > 0)
+                {
+                    url += "?" + string.Join("&", queryParams);
+                }
+                
+                var response = await httpClient.GetAsync(url);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    
+                    var statisticsDtos = JsonSerializer.Deserialize<InventoryStatisticsDto[]>(json, options);
+                    
+                    statisticsItems.Clear();
+                    if (statisticsDtos != null && statisticsDtos.Length > 0)
+                    {
+                        foreach (var dto in statisticsDtos)
+                        {
+                            var status = DetermineStatus(dto.InventoryDepletionIndex);
+                            
+                            statisticsItems.Add(new InventoryStatistics
+                            {
+                                ItemCode = dto.ProductId.ToString(),
+                                ItemName = dto.ProductName ?? "이름 없음",
+                                Category = dto.Category ?? "미분류",
+                                DailyChangeRate = dto.InventoryTurnoverRate.ToString("F2"),
+                                MonthlyChangeRate = dto.InventoryDepletionIndex.ToString("F2"),
+                                QuarterlyChangeRate = dto.MonthlySalesVolume.ToString(),
+                                CurrentStock = dto.MonthlySalesVolume,
+                                SafetyStock = 0, // 안전재고량은 별도로 조회 필요
+                                Status = status
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("재고 통계 데이터를 불러오는데 실패했습니다.", "오류", 
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"재고 통계 데이터 로드 중 오류가 발생했습니다: {ex.Message}", "오류", 
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-            StatisticsDataGrid.ItemsSource = sampleStatistics;
+        private string DetermineStatus(decimal inventoryDepletionIndex)
+        {
+            if (inventoryDepletionIndex >= 1.0m)
+            {
+                return "부족";
+            }
+            else if (inventoryDepletionIndex >= 0.8m)
+            {
+                return "주의";
+            }
+            else
+            {
+                return "정상";
+            }
         }
 
         private void StatisticsDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -38,7 +116,11 @@ namespace jujin.Views.Inventory
 
         private void DetailButton_Click(object sender, RoutedEventArgs e)
         {
-            ShowDetailPage();
+            if (sender is Button button && button.DataContext is InventoryStatistics item)
+            {
+                var salesTrendWindow = new SalesTrendWindow(int.Parse(item.ItemCode), item.ItemName);
+                salesTrendWindow.ShowDialog();
+            }
         }
 
         private void ShowDetailPage()
@@ -46,14 +128,18 @@ namespace jujin.Views.Inventory
             var selectedItem = StatisticsDataGrid.SelectedItem as InventoryStatistics;
             if (selectedItem != null)
             {
-                var detailPage = new InventoryStatisticsDetailPage(selectedItem);
-                // 부모 컨테이너에 상세 페이지 표시
-                var parent = this.Parent as ContentControl;
-                if (parent != null)
-                {
-                    parent.Content = detailPage;
-                }
+                var salesTrendWindow = new SalesTrendWindow(int.Parse(selectedItem.ItemCode), selectedItem.ItemName);
+                salesTrendWindow.ShowDialog();
             }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            var productName = ProductNameTextBox.Text?.Trim();
+            var selectedCategory = CategoryComboBox.SelectedItem as ComboBoxItem;
+            var category = selectedCategory?.Content?.ToString();
+            
+            LoadStatisticsData(productName, category);
         }
     }
 
@@ -69,5 +155,16 @@ namespace jujin.Views.Inventory
         public int CurrentStock { get; set; }
         public int SafetyStock { get; set; }
         public string Status { get; set; }
+    }
+
+    // 백엔드 DTO 클래스
+    public class InventoryStatisticsDto
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public string Category { get; set; }
+        public decimal InventoryTurnoverRate { get; set; }
+        public decimal InventoryDepletionIndex { get; set; }
+        public int MonthlySalesVolume { get; set; }
     }
 }
