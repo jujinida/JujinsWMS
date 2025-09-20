@@ -391,7 +391,7 @@
         }
       }
     },
-    "/api/product/ship/{id}": {
+    "/api/product/ship-location/{id}": {
       "post": {
         "tags": [
           "Product"
@@ -676,6 +676,10 @@
         "type": "object",
         "properties": {
           "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "locationId": {
             "type": "integer",
             "format": "int32"
           }

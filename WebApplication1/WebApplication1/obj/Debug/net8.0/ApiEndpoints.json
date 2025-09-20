@@ -247,8 +247,8 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.ProductController",
-    "Method": "ShipProduct",
-    "RelativePath": "api/product/ship/{id}",
+    "Method": "ShipProductLocation",
+    "RelativePath": "api/product/ship-location/{id}",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,

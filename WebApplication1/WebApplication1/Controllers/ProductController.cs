@@ -362,12 +362,13 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpPost("ship/{id}")]
-        public async Task<IActionResult> ShipProduct(int id, [FromBody] ProductShipRequest request)
+        [HttpPost("ship-location/{id}")]
+        public async Task<IActionResult> ShipProductLocation(int id, [FromBody] ProductShipRequest request)
         {
             try
             {
-                _logger.LogInformation("제품 출고 요청: ProductId={ProductId}, Quantity={Quantity}", id, request.Quantity);
+                _logger.LogInformation("제품 출고 요청 (Location 기반): ProductId={ProductId}, Quantity={Quantity}, LocationId={LocationId}", 
+                    id, request.Quantity, request.LocationId);
 
                 if (request.Quantity <= 0)
                 {
@@ -385,44 +386,93 @@ namespace WebApplication1.Controllers
                     {
                         try
                         {
-                            // 현재 재고량 조회
-                            string selectQuery = "SELECT stock_quantity FROM Products WHERE product_id = @ProductId";
-                            int currentStock = 0;
+                            // 현재 총 재고량 조회 (Product_Locations 테이블에서)
+                            string selectQuery = @"
+                                SELECT SUM(stock_quantity) as total_quantity
+                                FROM Product_Locations
+                                WHERE product_id = @ProductId";
                             
+                            int currentTotalStock = 0;
                             using (var selectCmd = new SqlCommand(selectQuery, conn, transaction))
                             {
                                 selectCmd.Parameters.AddWithValue("@ProductId", id);
                                 var result = await selectCmd.ExecuteScalarAsync();
                                 
-                                if (result == null)
-                                {
-                                    return NotFound(new { message = "제품을 찾을 수 없습니다." });
-                                }
+                                _logger.LogInformation("총 재고량 조회 결과: ProductId={ProductId}, Result={Result}", id, result);
                                 
-                                currentStock = Convert.ToInt32(result);
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    currentTotalStock = Convert.ToInt32(result);
+                                    _logger.LogInformation("현재 총 재고량: {CurrentTotalStock}", currentTotalStock);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("총 재고량 조회 결과가 NULL입니다. ProductId={ProductId}", id);
+                                }
                             }
 
-                            // 재고량이 부족한지 확인
-                            if (currentStock < request.Quantity)
+                            // 선택된 창고의 현재 재고량 조회
+                            string locationQuery = @"
+                                SELECT stock_quantity
+                                FROM Product_Locations
+                                WHERE product_id = @ProductId AND location_id = @LocationId";
+                            
+                            int targetLocationId = request.LocationId;
+                            int currentLocationStock = 0;
+                            bool locationExists = false;
+                            
+                            using (var locationCmd = new SqlCommand(locationQuery, conn, transaction))
                             {
-                                return BadRequest(new { message = $"재고가 부족합니다. 현재 재고: {currentStock}개, 요청 출고량: {request.Quantity}개" });
+                                locationCmd.Parameters.AddWithValue("@ProductId", id);
+                                locationCmd.Parameters.AddWithValue("@LocationId", request.LocationId);
+                                
+                                var result = await locationCmd.ExecuteScalarAsync();
+                                _logger.LogInformation("창고별 재고량 조회 결과: ProductId={ProductId}, LocationId={LocationId}, Result={Result}", 
+                                    id, request.LocationId, result);
+                                
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    currentLocationStock = Convert.ToInt32(result);
+                                    locationExists = true;
+                                    _logger.LogInformation("현재 창고 재고량: {CurrentLocationStock}", currentLocationStock);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("창고 재고량 조회 결과가 NULL입니다. ProductId={ProductId}, LocationId={LocationId} - 출고 불가", 
+                                        id, request.LocationId);
+                                    return BadRequest(new { message = "해당 창고에 재고가 없습니다." });
+                                }
                             }
 
-                            // 재고량 업데이트 (출고량만큼 차감)
-                            int newStock = currentStock - request.Quantity;
+                            // 재고량이 부족한지 확인 (선택된 창고 기준)
+                            if (currentLocationStock < request.Quantity)
+                            {
+                                return BadRequest(new { message = $"해당 창고의 재고가 부족합니다. 현재 재고: {currentLocationStock}개, 요청 출고량: {request.Quantity}개" });
+                            }
+
+                            // 해당 창고의 재고량 업데이트 (출고량만큼 차감)
+                            int newLocationStock = currentLocationStock - request.Quantity;
+                            
                             string updateQuery = @"
-                                UPDATE Products 
+                                UPDATE Product_Locations 
                                 SET stock_quantity = @NewStock, updated_at = GETDATE()
-                                WHERE product_id = @ProductId";
+                                WHERE product_id = @ProductId AND location_id = @LocationId";
+
+                            _logger.LogInformation("창고 재고량 출고 업데이트: ProductId={ProductId}, LocationId={LocationId}, OldStock={OldStock}, NewStock={NewStock}, Quantity={Quantity}", 
+                                id, targetLocationId, currentLocationStock, newLocationStock, request.Quantity);
 
                             using (var updateCmd = new SqlCommand(updateQuery, conn, transaction))
                             {
                                 updateCmd.Parameters.AddWithValue("@ProductId", id);
-                                updateCmd.Parameters.AddWithValue("@NewStock", newStock);
+                                updateCmd.Parameters.AddWithValue("@LocationId", targetLocationId);
+                                updateCmd.Parameters.AddWithValue("@NewStock", newLocationStock);
                                 
                                 int rowsAffected = await updateCmd.ExecuteNonQueryAsync();
+                                _logger.LogInformation("창고 재고량 출고 업데이트 결과: RowsAffected={RowsAffected}", rowsAffected);
+                                
                                 if (rowsAffected == 0)
                                 {
+                                    _logger.LogError("창고 재고량 출고 업데이트 실패: ProductId={ProductId}, LocationId={LocationId}", id, targetLocationId);
                                     return NotFound(new { message = "제품을 찾을 수 없습니다." });
                                 }
                             }
@@ -437,21 +487,23 @@ namespace WebApplication1.Controllers
                                 logCmd.Parameters.AddWithValue("@ProductId", id);
                                 logCmd.Parameters.AddWithValue("@ChangeType", "출고");
                                 logCmd.Parameters.AddWithValue("@QuantityChanged", request.Quantity);
-                                logCmd.Parameters.AddWithValue("@CurrentQuantity", newStock);
+                                logCmd.Parameters.AddWithValue("@CurrentQuantity", currentTotalStock - request.Quantity);
                                 
                                 await logCmd.ExecuteNonQueryAsync();
+                                _logger.LogInformation("재고 로그 추가 완료: ProductId={ProductId}, ChangeType=출고, QuantityChanged={QuantityChanged}, CurrentQuantity={CurrentQuantity}", 
+                                    id, request.Quantity, currentTotalStock - request.Quantity);
                             }
 
                             // 트랜잭션 커밋
                             transaction.Commit();
                             
-                            _logger.LogInformation("제품 출고 완료: ProductId={ProductId}, OldStock={OldStock}, NewStock={NewStock}", 
-                                id, currentStock, newStock);
+                            _logger.LogInformation("제품 출고 완료 (Location 기반): ProductId={ProductId}, OldStock={OldStock}, NewStock={NewStock}", 
+                                id, currentTotalStock, currentTotalStock - request.Quantity);
                             
                             return Ok(new { 
                                 message = "출고가 성공적으로 처리되었습니다.",
-                                oldStock = currentStock,
-                                newStock = newStock,
+                                oldStock = currentTotalStock,
+                                newStock = currentTotalStock - request.Quantity,
                                 quantityShipped = request.Quantity
                             });
                         }
@@ -465,7 +517,7 @@ namespace WebApplication1.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "제품 출고 중 오류 발생");
+                _logger.LogError(ex, "제품 출고 중 오류 발생 (Location 기반)");
                 return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
             }
         }
@@ -884,6 +936,7 @@ namespace WebApplication1.Controllers
     public class ProductShipRequest
     {
         public int Quantity { get; set; }
+        public int LocationId { get; set; }
     }
 
     public class ShippingHistoryDto
