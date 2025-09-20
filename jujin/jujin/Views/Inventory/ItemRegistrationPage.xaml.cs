@@ -156,6 +156,20 @@ namespace jujin.Views.Inventory
                     return;
                 }
 
+                if (!int.TryParse(SafetyStockTextBox.Text, out int safetyStock))
+                {
+                    MessageBox.Show("올바른 안전재고량을 입력해주세요.", "입력 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 창고 선택 검증
+                if (LocationComboBox.SelectedItem is not ComboBoxItem selectedLocationItem)
+                {
+                    MessageBox.Show("창고를 선택해주세요.", "입력 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                int locationId = int.Parse(selectedLocationItem.Tag.ToString());
+
                 // 카테고리 가져오기
                 string category = CategoryComboBox.SelectedItem is ComboBoxItem selectedItem ? selectedItem.Content.ToString() : "";
 
@@ -189,7 +203,7 @@ namespace jujin.Views.Inventory
 
                 // 제품 등록
                 RegisterButton.Content = "제품 등록 중...";
-                await RegisterProduct(ProductNameTextBox.Text, category, price, stockQuantity, imageUrl);
+                await RegisterProduct(ProductNameTextBox.Text, category, price, stockQuantity, safetyStock, locationId, imageUrl);
             }
             catch (Exception ex)
             {
@@ -203,7 +217,7 @@ namespace jujin.Views.Inventory
             }
         }
 
-        private async Task RegisterProduct(string productName, string category, decimal price, int stockQuantity, string imageUrl)
+        private async Task RegisterProduct(string productName, string category, decimal price, int stockQuantity, int safetyStock, int locationId, string imageUrl)
         {
             try
             {
@@ -213,6 +227,8 @@ namespace jujin.Views.Inventory
                     Category = category,
                     Price = price,
                     StockQuantity = stockQuantity,
+                    SafetyStock = safetyStock,
+                    LocationId = locationId,
                     ImageUrl = imageUrl
                 };
 
@@ -249,6 +265,8 @@ namespace jujin.Views.Inventory
             CategoryComboBox.SelectedIndex = -1;
             PriceTextBox.Text = "";
             StockQuantityTextBox.Text = "";
+            SafetyStockTextBox.Text = "";
+            LocationComboBox.SelectedIndex = -1;
             selectedImagePath = "";
             SelectedImagePath.Text = "선택된 파일이 없습니다.";
             SetDefaultImage();

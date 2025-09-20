@@ -47,6 +47,8 @@ namespace jujin.Views.Inventory
             ProductNameTextBox.Text = productInfo.ProductName;
             PriceTextBox.Text = productInfo.Price.ToString();
             StockQuantityTextBox.Text = productInfo.StockQuantity.ToString();
+            SafetyStockTextBox.Text = productInfo.SafetyStock.ToString();
+            LocationTextBox.Text = productInfo.LocationName ?? "미지정";
             
             // 카테고리 설정
             foreach (System.Windows.Controls.ComboBoxItem item in CategoryComboBox.Items)
@@ -81,6 +83,12 @@ namespace jujin.Views.Inventory
 
                 // 재고량은 읽기 전용이므로 검증하지 않음
                 int stockQuantity = productInfo.StockQuantity; // 기존 재고량 유지
+
+                if (!int.TryParse(SafetyStockTextBox.Text, out int safetyStock))
+                {
+                    MessageBox.Show("올바른 안전재고량을 입력해주세요.", "입력 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 // 카테고리 가져오기
                 string category = CategoryComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem ? selectedItem.Content.ToString() : "";
@@ -118,6 +126,7 @@ namespace jujin.Views.Inventory
                     Category = category,
                     Price = price,
                     StockQuantity = stockQuantity,
+                    SafetyStock = safetyStock,
                     ImageUrl = newImageUrl
                 };
 

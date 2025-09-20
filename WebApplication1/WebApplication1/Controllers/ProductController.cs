@@ -46,9 +46,11 @@ namespace WebApplication1.Controllers
                 {
                     await conn.OpenAsync();
                     string query = @"
-                        SELECT product_id, product_name, category, price, stock_quantity, pd_url
-                        FROM Products
-                        ORDER BY product_id";
+                        SELECT p.product_id, p.product_name, p.category, p.price, p.stock_quantity, p.safety_stock, 
+                               pl.location_id, p.pd_url
+                        FROM Products p
+                        LEFT JOIN Product_Locations pl ON p.product_id = pl.product_id
+                        ORDER BY p.product_id";
 
                     using (var cmd = new SqlCommand(query, conn))
                     {
@@ -61,10 +63,12 @@ namespace WebApplication1.Controllers
                                 var category = reader.IsDBNull(2) ? null : reader.GetString(2);
                                 var price = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3);
                                 var stockQuantity = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
-                                var imageUrl = reader.IsDBNull(5) ? null : reader.GetString(5);
+                                var safetyStock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
+                                var locationId = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
+                                var imageUrl = reader.IsDBNull(7) ? null : reader.GetString(7);
                                 
-                                _logger.LogDebug("제품 데이터: ID={ProductId}, Name={ProductName}, Category={Category}, Price={Price}, Stock={StockQuantity}", 
-                                    productId, productName, category, price, stockQuantity);
+                                _logger.LogDebug("제품 데이터: ID={ProductId}, Name={ProductName}, Category={Category}, Price={Price}, Stock={StockQuantity}, SafetyStock={SafetyStock}, LocationId={LocationId}", 
+                                    productId, productName, category, price, stockQuantity, safetyStock, locationId);
                                 
                                 products.Add(new ProductDto
                                 {
@@ -73,6 +77,9 @@ namespace WebApplication1.Controllers
                                     Category = category,
                                     Price = price,
                                     StockQuantity = stockQuantity,
+                                    SafetyStock = safetyStock,
+                                    LocationId = locationId,
+                                    LocationName = GetLocationName(locationId),
                                     ImageUrl = imageUrl
                                 });
                             }
@@ -104,8 +111,9 @@ namespace WebApplication1.Controllers
                     await conn.OpenAsync();
 
                     var query = @"
-                        INSERT INTO Products (product_name, category, price, stock_quantity, pd_url)
-                        VALUES (@product_name, @category, @price, @stock_quantity, @pd_url)";
+                        INSERT INTO Products (product_name, category, price, stock_quantity, safety_stock, pd_url)
+                        OUTPUT INSERTED.product_id
+                        VALUES (@product_name, @category, @price, @stock_quantity, @safety_stock, @pd_url)";
 
                     using (var cmd = new SqlCommand(query, conn))
                     {
@@ -113,13 +121,30 @@ namespace WebApplication1.Controllers
                         cmd.Parameters.AddWithValue("@category", request.Category ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@price", request.Price);
                         cmd.Parameters.AddWithValue("@stock_quantity", request.StockQuantity);
+                        cmd.Parameters.AddWithValue("@safety_stock", request.SafetyStock);
                         cmd.Parameters.AddWithValue("@pd_url", request.ImageUrl ?? (object)DBNull.Value);
 
-                        var result = await cmd.ExecuteNonQueryAsync();
+                        var productId = await cmd.ExecuteScalarAsync();
 
-                        if (result > 0)
+                        if (productId != null && productId != DBNull.Value)
                         {
-                            _logger.LogInformation("제품 등록 성공: {ProductName}", request.ProductName);
+                            var newProductId = Convert.ToInt32(productId);
+                            
+                            // Product_Locations 테이블에 데이터 삽입
+                            var locationQuery = @"
+                                INSERT INTO Product_Locations (product_id, location_id, stock_quantity)
+                                VALUES (@product_id, @location_id, @stock_quantity)";
+                            
+                            using (var locationCmd = new SqlCommand(locationQuery, conn))
+                            {
+                                locationCmd.Parameters.AddWithValue("@product_id", newProductId);
+                                locationCmd.Parameters.AddWithValue("@location_id", request.LocationId);
+                                locationCmd.Parameters.AddWithValue("@stock_quantity", request.StockQuantity);
+                                
+                                await locationCmd.ExecuteNonQueryAsync();
+                            }
+                            
+                            _logger.LogInformation("제품 등록 성공: {ProductName}, ProductId={ProductId}", request.ProductName, newProductId);
                             return Ok(new { message = "제품이 성공적으로 등록되었습니다." });
                         }
                         else
@@ -201,6 +226,7 @@ namespace WebApplication1.Controllers
                             category = @Category,
                             price = @Price,
                             stock_quantity = @StockQuantity,
+                            safety_stock = @SafetyStock,
                             pd_url = @ImageUrl,
                             updated_at = GETDATE()
                         WHERE product_id = @ProductId";
@@ -212,6 +238,7 @@ namespace WebApplication1.Controllers
                         cmd.Parameters.AddWithValue("@Category", request.Category ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Price", request.Price);
                         cmd.Parameters.AddWithValue("@StockQuantity", request.StockQuantity);
+                        cmd.Parameters.AddWithValue("@SafetyStock", request.SafetyStock);
                         cmd.Parameters.AddWithValue("@ImageUrl", request.ImageUrl ?? (object)DBNull.Value);
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
@@ -557,6 +584,251 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [HttpGet("warehouse-stock/{productId}")]
+        public async Task<IActionResult> GetWarehouseStock(int productId)
+        {
+            try
+            {
+                _logger.LogInformation("창고별 재고량 조회 요청: ProductId={ProductId}", productId);
+
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+                var warehouseStocks = new List<WarehouseStockDto>();
+
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    await conn.OpenAsync();
+                    string query = @"
+                        SELECT location_id, stock_quantity
+                        FROM Product_Locations
+                        WHERE product_id = @ProductId";
+
+                    using (var cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@ProductId", productId);
+                        
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var locationId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                                var stockQuantity = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                                
+                                warehouseStocks.Add(new WarehouseStockDto
+                                {
+                                    LocationId = locationId,
+                                    StockQuantity = stockQuantity
+                                });
+                            }
+                        }
+                    }
+                }
+
+                _logger.LogInformation("창고별 재고량 조회 완료: {Count}개", warehouseStocks.Count);
+                return Ok(warehouseStocks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "창고별 재고량 조회 중 오류 발생");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            }
+        }
+
+        [HttpPost("receive-location/{id}")]
+        public async Task<IActionResult> ReceiveProductLocation(int id, [FromBody] ProductReceiveRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("제품 입고 요청 (Location 기반): ProductId={ProductId}, Quantity={Quantity}", id, request.Quantity);
+
+                if (request.Quantity <= 0)
+                {
+                    return BadRequest(new { message = "입고량은 0보다 커야 합니다." });
+                }
+
+                string connectionString = _configuration.GetConnectionString("DefaultConnection");
+
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    await conn.OpenAsync();
+                    
+                    // 트랜잭션 시작
+                    using (var transaction = conn.BeginTransaction())
+                    {
+                        try
+                        {
+                            // 현재 총 재고량 조회 (Product_Locations 테이블에서)
+                            string selectQuery = @"
+                                SELECT SUM(stock_quantity) as total_quantity
+                                FROM Product_Locations
+                                WHERE product_id = @ProductId";
+                            
+                            int currentTotalStock = 0;
+                            using (var selectCmd = new SqlCommand(selectQuery, conn, transaction))
+                            {
+                                selectCmd.Parameters.AddWithValue("@ProductId", id);
+                                var result = await selectCmd.ExecuteScalarAsync();
+                                
+                                _logger.LogInformation("총 재고량 조회 결과: ProductId={ProductId}, Result={Result}", id, result);
+                                
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    currentTotalStock = Convert.ToInt32(result);
+                                    _logger.LogInformation("현재 총 재고량: {CurrentTotalStock}", currentTotalStock);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("총 재고량 조회 결과가 NULL입니다. ProductId={ProductId}", id);
+                                }
+                            }
+
+                            // 선택된 창고의 현재 재고량 조회
+                            string locationQuery = @"
+                                SELECT stock_quantity
+                                FROM Product_Locations
+                                WHERE product_id = @ProductId AND location_id = @LocationId";
+                            
+                            int targetLocationId = request.LocationId;
+                            int currentLocationStock = 0;
+                            bool locationExists = false;
+                            
+                            using (var locationCmd = new SqlCommand(locationQuery, conn, transaction))
+                            {
+                                locationCmd.Parameters.AddWithValue("@ProductId", id);
+                                locationCmd.Parameters.AddWithValue("@LocationId", request.LocationId);
+                                
+                                var result = await locationCmd.ExecuteScalarAsync();
+                                _logger.LogInformation("창고별 재고량 조회 결과: ProductId={ProductId}, LocationId={LocationId}, Result={Result}", 
+                                    id, request.LocationId, result);
+                                
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    currentLocationStock = Convert.ToInt32(result);
+                                    locationExists = true;
+                                    _logger.LogInformation("현재 창고 재고량: {CurrentLocationStock}", currentLocationStock);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("창고 재고량 조회 결과가 NULL입니다. ProductId={ProductId}, LocationId={LocationId} - 새 레코드 생성 예정", 
+                                        id, request.LocationId);
+                                }
+                            }
+
+                            // 해당 창고의 재고량 업데이트 또는 삽입
+                            int newLocationStock = currentLocationStock + request.Quantity;
+                            
+                            if (locationExists)
+                            {
+                                // 기존 레코드가 있으면 UPDATE
+                                string updateQuery = @"
+                                    UPDATE Product_Locations 
+                                    SET stock_quantity = @NewStock, updated_at = GETDATE()
+                                    WHERE product_id = @ProductId AND location_id = @LocationId";
+
+                                _logger.LogInformation("창고 재고량 업데이트: ProductId={ProductId}, LocationId={LocationId}, OldStock={OldStock}, NewStock={NewStock}, Quantity={Quantity}", 
+                                    id, targetLocationId, currentLocationStock, newLocationStock, request.Quantity);
+
+                                using (var updateCmd = new SqlCommand(updateQuery, conn, transaction))
+                                {
+                                    updateCmd.Parameters.AddWithValue("@ProductId", id);
+                                    updateCmd.Parameters.AddWithValue("@LocationId", targetLocationId);
+                                    updateCmd.Parameters.AddWithValue("@NewStock", newLocationStock);
+                                    
+                                    int rowsAffected = await updateCmd.ExecuteNonQueryAsync();
+                                    _logger.LogInformation("창고 재고량 업데이트 결과: RowsAffected={RowsAffected}", rowsAffected);
+                                    
+                                    if (rowsAffected == 0)
+                                    {
+                                        _logger.LogError("창고 재고량 업데이트 실패: ProductId={ProductId}, LocationId={LocationId}", id, targetLocationId);
+                                        return NotFound(new { message = "제품을 찾을 수 없습니다." });
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 기존 레코드가 없으면 INSERT
+                                string insertQuery = @"
+                                    INSERT INTO Product_Locations (product_id, location_id, stock_quantity)
+                                    VALUES (@ProductId, @LocationId, @NewStock)";
+
+                                _logger.LogInformation("창고 재고량 신규 생성: ProductId={ProductId}, LocationId={LocationId}, NewStock={NewStock}, Quantity={Quantity}", 
+                                    id, targetLocationId, newLocationStock, request.Quantity);
+
+                                using (var insertCmd = new SqlCommand(insertQuery, conn, transaction))
+                                {
+                                    insertCmd.Parameters.AddWithValue("@ProductId", id);
+                                    insertCmd.Parameters.AddWithValue("@LocationId", targetLocationId);
+                                    insertCmd.Parameters.AddWithValue("@NewStock", newLocationStock);
+                                    
+                                    int rowsAffected = await insertCmd.ExecuteNonQueryAsync();
+                                    _logger.LogInformation("창고 재고량 신규 생성 결과: RowsAffected={RowsAffected}", rowsAffected);
+                                    
+                                    if (rowsAffected == 0)
+                                    {
+                                        _logger.LogError("창고 재고량 신규 생성 실패: ProductId={ProductId}, LocationId={LocationId}", id, targetLocationId);
+                                        return StatusCode(500, new { message = "창고 재고량 생성에 실패했습니다." });
+                                    }
+                                }
+                            }
+
+                            // 재고 로그 추가
+                            string logQuery = @"
+                                INSERT INTO InventoryLogs (product_id, change_type, quantity_changed, current_quantity)
+                                VALUES (@ProductId, @ChangeType, @QuantityChanged, @CurrentQuantity)";
+
+                            using (var logCmd = new SqlCommand(logQuery, conn, transaction))
+                            {
+                                logCmd.Parameters.AddWithValue("@ProductId", id);
+                                logCmd.Parameters.AddWithValue("@ChangeType", "입고");
+                                logCmd.Parameters.AddWithValue("@QuantityChanged", request.Quantity);
+                                logCmd.Parameters.AddWithValue("@CurrentQuantity", currentTotalStock + request.Quantity);
+                                
+                                await logCmd.ExecuteNonQueryAsync();
+                                _logger.LogInformation("재고 로그 추가 완료: ProductId={ProductId}, ChangeType=입고, QuantityChanged={QuantityChanged}, CurrentQuantity={CurrentQuantity}", 
+                                    id, request.Quantity, currentTotalStock + request.Quantity);
+                            }
+
+                            // 트랜잭션 커밋
+                            transaction.Commit();
+                            
+                            _logger.LogInformation("제품 입고 완료 (Location 기반): ProductId={ProductId}, OldStock={OldStock}, NewStock={NewStock}", 
+                                id, currentTotalStock, currentTotalStock + request.Quantity);
+                            
+                            return Ok(new { 
+                                message = "입고가 성공적으로 처리되었습니다.",
+                                oldStock = currentTotalStock,
+                                newStock = currentTotalStock + request.Quantity,
+                                quantityReceived = request.Quantity
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            throw ex;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "제품 입고 중 오류 발생 (Location 기반)");
+                return StatusCode(500, new { message = "서버 오류가 발생했습니다." });
+            }
+        }
+
+        private string GetLocationName(int locationId)
+        {
+            return locationId switch
+            {
+                1 => "A-1",
+                2 => "A-2",
+                3 => "A-3",
+                4 => "B-1",
+                5 => "B-2",
+                6 => "C-1",
+                _ => "미지정"
+            };
+        }
+
     }
 
     public class ProductDto
@@ -566,6 +838,9 @@ namespace WebApplication1.Controllers
         public string Category { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        public int SafetyStock { get; set; }
+        public int LocationId { get; set; }
+        public string LocationName { get; set; }
         public string ImageUrl { get; set; }
     }
 
@@ -575,6 +850,7 @@ namespace WebApplication1.Controllers
         public string Category { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        public int SafetyStock { get; set; }
         public string ImageUrl { get; set; }
     }
 
@@ -584,12 +860,15 @@ namespace WebApplication1.Controllers
         public string Category { get; set; }
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        public int SafetyStock { get; set; }
+        public int LocationId { get; set; }
         public string ImageUrl { get; set; }
     }
 
     public class ProductReceiveRequest
     {
         public int Quantity { get; set; }
+        public int LocationId { get; set; }
     }
 
     public class ReceivingHistoryDto
@@ -615,6 +894,12 @@ namespace WebApplication1.Controllers
         public string ProductName { get; set; }
         public int QuantityChanged { get; set; }
         public int CurrentQuantity { get; set; }
+    }
+
+    public class WarehouseStockDto
+    {
+        public int LocationId { get; set; }
+        public int StockQuantity { get; set; }
     }
 
 }

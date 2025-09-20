@@ -457,6 +457,71 @@
         }
       }
     },
+    "/api/product/warehouse-stock/{productId}": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/product/receive-location/{id}": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductReceiveRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductReceiveRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductReceiveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/WeatherForecast": {
       "get": {
         "tags": [
@@ -565,6 +630,10 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          },
+          "locationId": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -585,6 +654,14 @@
             "format": "double"
           },
           "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "safetyStock": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "locationId": {
             "type": "integer",
             "format": "int32"
           },
@@ -621,6 +698,10 @@
             "format": "double"
           },
           "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "safetyStock": {
             "type": "integer",
             "format": "int32"
           },

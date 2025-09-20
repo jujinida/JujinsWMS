@@ -169,6 +169,27 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.ProductController",
+    "Method": "ReceiveProductLocation",
+    "RelativePath": "api/product/receive-location/{id}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "WebApplication1.Controllers.ProductReceiveRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.ProductController",
     "Method": "ReceiveProduct",
     "RelativePath": "api/product/receive/{id}",
     "HttpMethod": "POST",
@@ -271,6 +292,22 @@
       {
         "Name": "request",
         "Type": "WebApplication1.Controllers.ProductUpdateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.ProductController",
+    "Method": "GetWarehouseStock",
+    "RelativePath": "api/product/warehouse-stock/{productId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "productId",
+        "Type": "System.Int32",
         "IsRequired": true
       }
     ],

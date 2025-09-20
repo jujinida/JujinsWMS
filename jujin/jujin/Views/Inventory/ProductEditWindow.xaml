@@ -86,9 +86,25 @@
                         </StackPanel>
 
                         <!-- 재고량 (읽기 전용) -->
-                        <StackPanel Margin="0,0,0,25">
+                        <StackPanel Margin="0,0,0,15">
                             <TextBlock Text="재고량:" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBox x:Name="StockQuantityTextBox" Height="35" 
+                                     Padding="10,0" VerticalContentAlignment="Center"
+                                     IsReadOnly="True" Background="#F5F5F5" 
+                                     Foreground="#666666"/>
+                        </StackPanel>
+
+                        <!-- 안전재고량 -->
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="안전재고량:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="SafetyStockTextBox" Height="35" 
+                                     Padding="10,0" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- 창고 정보 (읽기 전용) -->
+                        <StackPanel Margin="0,0,0,25">
+                            <TextBlock Text="창고:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="LocationTextBox" Height="35" 
                                      Padding="10,0" VerticalContentAlignment="Center"
                                      IsReadOnly="True" Background="#F5F5F5" 
                                      Foreground="#666666"/>

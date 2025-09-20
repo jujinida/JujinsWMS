@@ -2,7 +2,7 @@
 <Window x:Class="jujin.Views.Inventory.ReceivingDetailWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="제품 입고" Height="600" Width="900"
+        Title="제품 입고" Height="900" Width="1350"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#ECEFF4">
@@ -73,10 +73,92 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="현재재고:" FontWeight="SemiBold" Width="80" VerticalAlignment="Center"/>
-                        <TextBox x:Name="CurrentStockTextBox" IsReadOnly="True" Height="30" Width="200" 
+                        <TextBlock Text="총재고:" FontWeight="SemiBold" Width="80" VerticalAlignment="Center"/>
+                        <TextBox x:Name="TotalStockTextBox" IsReadOnly="True" Height="30" Width="200" 
                                  Padding="5,0" VerticalContentAlignment="Center" Background="#EFEFEF"/>
                     </StackPanel>
+
+                    <!-- 창고별 재고량 -->
+                    <TextBlock Text="창고별 재고량" FontSize="14" FontWeight="SemiBold" 
+                               Foreground="#2E3440" Margin="0,0,0,10"/>
+                    
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- A-1 창고 -->
+                        <Border Grid.Column="0" Grid.Row="0" x:Name="A1WarehouseBorder" Tag="1"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="0,0,5,5"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="A-1 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="A1StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- A-2 창고 -->
+                        <Border Grid.Column="1" Grid.Row="0" x:Name="A2WarehouseBorder" Tag="2"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="5,0,5,5"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="A-2 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="A2StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- A-3 창고 -->
+                        <Border Grid.Column="2" Grid.Row="0" x:Name="A3WarehouseBorder" Tag="3"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="5,0,0,5"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="A-3 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="A3StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- B-1 창고 -->
+                        <Border Grid.Column="0" Grid.Row="1" x:Name="B1WarehouseBorder" Tag="4"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="0,5,5,0"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="B-1 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="B1StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- B-2 창고 -->
+                        <Border Grid.Column="1" Grid.Row="1" x:Name="B2WarehouseBorder" Tag="5"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="5,5,5,0"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="B-2 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="B2StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- C-1 창고 -->
+                        <Border Grid.Column="2" Grid.Row="1" x:Name="C1WarehouseBorder" Tag="6"
+                                Background="#F8F9FA" BorderBrush="#D8DEE9" BorderThickness="1" 
+                                CornerRadius="3" Padding="10" Margin="5,5,0,0"
+                                MouseLeftButtonDown="WarehouseBorder_MouseLeftButtonDown">
+                            <StackPanel>
+                                <TextBlock Text="C-1 창고" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="C1StockTextBlock" Text="재고: 0" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
 
                     <!-- Receiving Information -->
                     <TextBlock Text="입고 정보" FontSize="14" FontWeight="SemiBold" 
