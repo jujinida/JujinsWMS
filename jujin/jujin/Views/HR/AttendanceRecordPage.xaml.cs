@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,11 +13,13 @@ namespace jujin.Views.HR
     public partial class AttendanceRecordPage : UserControl
     {
         private readonly HttpClient httpClient;
+        private ObservableCollection<AttendanceRecord> allAttendanceRecords; // 전체 데이터 저장용
 
         public AttendanceRecordPage()
         {
             InitializeComponent();
             httpClient = new HttpClient();
+            allAttendanceRecords = new ObservableCollection<AttendanceRecord>();
             // 오늘 날짜로 초기화
             SelectedDatePicker.SelectedDate = DateTime.Today;
             Loaded += AttendanceRecordPage_Loaded;
@@ -49,10 +52,10 @@ namespace jujin.Views.HR
                     };
                     var attendanceDtos = JsonSerializer.Deserialize<List<AttendanceRecordDto>>(json, options);
 
-                    var attendanceRecords = new ObservableCollection<AttendanceRecord>();
+                    allAttendanceRecords.Clear(); // 전체 데이터 초기화
                     foreach (var dto in attendanceDtos)
                     {
-                        attendanceRecords.Add(new AttendanceRecord
+                        allAttendanceRecords.Add(new AttendanceRecord
                         {
                             EmployeeId = dto.EmployeeId.ToString(),
                             EmployeeName = dto.EmployeeName,
@@ -67,7 +70,7 @@ namespace jujin.Views.HR
                         });
                     }
 
-                    AttendanceDataGrid.ItemsSource = attendanceRecords;
+                    ApplyFilters(); // 필터 적용
                 }
                 else
                 {
@@ -139,6 +142,45 @@ namespace jujin.Views.HR
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void ApplyFilters()
+        {
+            var filteredRecords = allAttendanceRecords.Where(record =>
+            {
+                // 직원명 필터
+                var employeeNameFilter = EmployeeNameFilter.Text.Trim();
+                if (!string.IsNullOrEmpty(employeeNameFilter) && 
+                    !record.EmployeeName.Contains(employeeNameFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                // 부서 필터
+                var selectedDepartment = DepartmentFilter.SelectedItem as ComboBoxItem;
+                if (selectedDepartment != null && selectedDepartment.Tag != null)
+                {
+                    var departmentId = int.Parse(selectedDepartment.Tag.ToString());
+                    if (departmentId != 0)
+                    {
+                        var expectedDepartmentName = GetDepartmentName(departmentId);
+                        if (record.DepartmentName != expectedDepartmentName)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            });
+
+            var attendanceRecords = new ObservableCollection<AttendanceRecord>(filteredRecords);
+            AttendanceDataGrid.ItemsSource = attendanceRecords;
         }
     }
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <UserControl x:Class="jujin.Views.HR.PayrollManagementPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -17,63 +17,82 @@
                 
                 <!-- 검색 조건 -->
                 <Grid Grid.Row="1" Margin="30,0,30,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     
-                    <TextBlock Grid.Column="0" Text="직원명:" VerticalAlignment="Center" 
-                               Margin="0,0,10,0" FontWeight="SemiBold"/>
-                    <TextBox Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    <!-- 년월 선택 -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button Grid.Column="0" Content="◀" Width="40" Height="35" 
+                                Background="#95A5A6" Foreground="White" BorderThickness="0"
+                                Click="PreviousMonthButton_Click" ToolTip="이전 달"/>
+                        
+                        <TextBlock x:Name="CurrentMonthText" Grid.Column="1" Text="2025년 9월" 
+                                   VerticalAlignment="Center" Margin="15,0" FontSize="18" 
+                                   FontWeight="Bold" Foreground="#2C3E50"/>
+                        
+                        <Button Grid.Column="2" Content="▶" Width="40" Height="35" 
+                                Background="#95A5A6" Foreground="White" BorderThickness="0"
+                                Click="NextMonthButton_Click" ToolTip="다음 달"/>
+                        
+                        <Button Grid.Column="3" Content="📅" Width="40" Height="35" 
+                                Background="#3498DB" Foreground="White" BorderThickness="0"
+                                Click="CalendarButton_Click" ToolTip="달력에서 선택"/>
+                    </Grid>
                     
-                    <TextBlock Grid.Column="2" Text="부서:" VerticalAlignment="Center" 
-                               Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="3" Height="35" VerticalContentAlignment="Center" Padding="10,0">
-                        <ComboBoxItem Content="전체"/>
-                        <ComboBoxItem Content="개발팀"/>
-                        <ComboBoxItem Content="마케팅팀"/>
-                        <ComboBoxItem Content="인사팀"/>
-                        <ComboBoxItem Content="재무팀"/>
-                        <ComboBoxItem Content="영업팀"/>
-                        <ComboBoxItem Content="기획팀"/>
-                    </ComboBox>
-                    
-                    <TextBlock Grid.Column="4" Text="년도:" VerticalAlignment="Center" 
-                               Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
-                        <ComboBoxItem Content="2024"/>
-                        <ComboBoxItem Content="2023"/>
-                        <ComboBoxItem Content="2022"/>
-                    </ComboBox>
-                    
-                    <TextBlock Grid.Column="6" Text="월:" VerticalAlignment="Center" 
-                               Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="7" Height="35" VerticalContentAlignment="Center" Padding="10,0">
-                        <ComboBoxItem Content="전체"/>
-                        <ComboBoxItem Content="1월"/>
-                        <ComboBoxItem Content="2월"/>
-                        <ComboBoxItem Content="3월"/>
-                        <ComboBoxItem Content="4월"/>
-                        <ComboBoxItem Content="5월"/>
-                        <ComboBoxItem Content="6월"/>
-                        <ComboBoxItem Content="7월"/>
-                        <ComboBoxItem Content="8월"/>
-                        <ComboBoxItem Content="9월"/>
-                        <ComboBoxItem Content="10월"/>
-                        <ComboBoxItem Content="11월"/>
-                        <ComboBoxItem Content="12월"/>
-                    </ComboBox>
-                    
-                    <Button Grid.Column="9" Content="검색" Width="80" Height="35"
-                            Background="#3498DB" Foreground="White" BorderThickness="0"/>
+                    <!-- 필터 조건 -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" Text="직원명:" VerticalAlignment="Center" 
+                                   Margin="0,0,10,0" FontWeight="SemiBold"/>
+                        <TextBox x:Name="EmployeeNameFilter" Grid.Column="1" Height="35" 
+                                 Padding="10,0" VerticalContentAlignment="Center"/>
+                        
+                        <TextBlock Grid.Column="2" Text="부서:" VerticalAlignment="Center" 
+                                   Margin="20,0,10,0" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="DepartmentFilter" Grid.Column="3" Height="35" 
+                                  VerticalContentAlignment="Center" Padding="10,0">
+                            <ComboBoxItem Content="전체" Tag="0"/>
+                            <ComboBoxItem Content="IT" Tag="1"/>
+                            <ComboBoxItem Content="마케팅" Tag="2"/>
+                            <ComboBoxItem Content="인사" Tag="3"/>
+                            <ComboBoxItem Content="재무" Tag="4"/>
+                            <ComboBoxItem Content="영업" Tag="5"/>
+                            <ComboBoxItem Content="기획" Tag="6"/>
+                        </ComboBox>
+                        
+                        <TextBlock Grid.Column="4" Text="지급상태:" VerticalAlignment="Center" 
+                                   Margin="20,0,10,0" FontWeight="SemiBold"/>
+                        <ComboBox x:Name="PaymentStatusFilter" Grid.Column="5" Height="35" 
+                                  VerticalContentAlignment="Center" Padding="10,0">
+                            <ComboBoxItem Content="전체"/>
+                            <ComboBoxItem Content="지급완료"/>
+                            <ComboBoxItem Content="지급예정"/>
+                        </ComboBox>
+                        
+                        <Button Grid.Column="7" Content="검색" Width="80" Height="35"
+                                Background="#3498DB" Foreground="White" BorderThickness="0"
+                                Click="SearchButton_Click"/>
+                    </Grid>
                 </Grid>
                 
                 <!-- 결과 테이블 -->
@@ -98,9 +117,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <Button Content="지급" Width="50" Height="25" Margin="0,0,5,0"
+                                            <Button Content="기록" Width="50" Height="25" Margin="0,0,5,0"
                                                     Background="#27AE60" Foreground="White" BorderThickness="0"
-                                                    FontSize="12" Click="PayButton_Click"/>
+                                                    FontSize="12" Click="RecordButton_Click"/>
                                             <Button Content="상세" Width="50" Height="25"
                                                     Background="#3498DB" Foreground="White" BorderThickness="0"
                                                     FontSize="12" Click="DetailButton_Click"/>

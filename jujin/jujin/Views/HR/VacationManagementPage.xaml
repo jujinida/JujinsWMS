@@ -30,23 +30,23 @@
                     
                     <TextBlock Grid.Column="0" Text="직원명:" VerticalAlignment="Center" 
                                Margin="0,0,10,0" FontWeight="SemiBold"/>
-                    <TextBox Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="EmployeeNameFilter" Grid.Column="1" Height="35" Padding="10,0" VerticalContentAlignment="Center"/>
                     
                     <TextBlock Grid.Column="2" Text="부서:" VerticalAlignment="Center" 
                                Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="3" Height="35" VerticalContentAlignment="Center" Padding="10,0">
-                        <ComboBoxItem Content="전체"/>
-                        <ComboBoxItem Content="개발팀"/>
-                        <ComboBoxItem Content="마케팅팀"/>
-                        <ComboBoxItem Content="인사팀"/>
-                        <ComboBoxItem Content="재무팀"/>
-                        <ComboBoxItem Content="영업팀"/>
-                        <ComboBoxItem Content="기획팀"/>
+                    <ComboBox x:Name="DepartmentFilter" Grid.Column="3" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                        <ComboBoxItem Content="전체" Tag="0"/>
+                        <ComboBoxItem Content="IT" Tag="1"/>
+                        <ComboBoxItem Content="마케팅" Tag="2"/>
+                        <ComboBoxItem Content="인사" Tag="3"/>
+                        <ComboBoxItem Content="재무" Tag="4"/>
+                        <ComboBoxItem Content="영업" Tag="5"/>
+                        <ComboBoxItem Content="기획" Tag="6"/>
                     </ComboBox>
                     
                     <TextBlock Grid.Column="4" Text="승인상태:" VerticalAlignment="Center" 
                                Margin="20,0,10,0" FontWeight="SemiBold"/>
-                    <ComboBox Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
+                    <ComboBox x:Name="ApprovalStatusFilter" Grid.Column="5" Height="35" VerticalContentAlignment="Center" Padding="10,0">
                         <ComboBoxItem Content="전체"/>
                         <ComboBoxItem Content="대기"/>
                         <ComboBoxItem Content="승인"/>
@@ -54,7 +54,8 @@
                     </ComboBox>
                     
                     <Button Grid.Column="7" Content="검색" Width="80" Height="35"
-                            Background="#3498DB" Foreground="White" BorderThickness="0"/>
+                            Background="#3498DB" Foreground="White" BorderThickness="0"
+                            Click="SearchButton_Click"/>
                 </Grid>
                 
                 <!-- 결과 테이블 -->

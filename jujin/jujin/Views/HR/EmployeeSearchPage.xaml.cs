@@ -131,18 +131,34 @@ namespace jujin.Views.HR
             {
                 bool matches = true;
 
-                if (!string.IsNullOrEmpty(employeeIdFilter) && 
-                    !employee.EmployeeName.Contains(employeeIdFilter, StringComparison.OrdinalIgnoreCase))
+                // 사원번호 필터 (정확한 일치)
+                if (!string.IsNullOrEmpty(employeeIdFilter))
                 {
-                    matches = false;
+                    if (int.TryParse(employeeIdFilter, out int searchId))
+                    {
+                        if (employee.EmployeeId != searchId)
+                        {
+                            matches = false;
+                        }
+                    }
+                    else
+                    {
+                        // 숫자가 아닌 경우 부분 일치로 검색
+                        if (!employee.EmployeeId.ToString().Contains(employeeIdFilter))
+                        {
+                            matches = false;
+                        }
+                    }
                 }
 
+                // 이름 필터 (부분 일치)
                 if (!string.IsNullOrEmpty(nameFilter) && 
                     !employee.EmployeeName.Contains(nameFilter, StringComparison.OrdinalIgnoreCase))
                 {
                     matches = false;
                 }
 
+                // 부서 필터 (정확한 일치)
                 if (!string.IsNullOrEmpty(departmentFilter) && departmentFilter != "전체" && 
                     employee.DepartmentName != departmentFilter)
                 {

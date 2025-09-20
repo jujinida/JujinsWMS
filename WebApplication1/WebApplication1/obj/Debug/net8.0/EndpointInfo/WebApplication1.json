@@ -230,6 +230,28 @@
         }
       }
     },
+    "/api/HR/payroll": {
+      "get": {
+        "tags": [
+          "HR"
+        ],
+        "parameters": [
+          {
+            "name": "paymentMonth",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "2025-09"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/product/list": {
       "get": {
         "tags": [

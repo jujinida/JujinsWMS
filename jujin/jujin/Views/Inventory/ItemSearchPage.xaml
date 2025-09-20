@@ -62,7 +62,6 @@
                             <DataGridTextColumn Header="품목명" Binding="{Binding ProductName}" Width="200"/>
                             <DataGridTextColumn Header="카테고리" Binding="{Binding Category}" Width="100"/>
                             <DataGridTextColumn Header="가격" Binding="{Binding Price, StringFormat={}{0:#,##0}원}" Width="120"/>                            
-                            <DataGridTextColumn Header="재고량" Binding="{Binding StockQuantity}" Width="100"/>
                             <DataGridTemplateColumn Header="작업" Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>

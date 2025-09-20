@@ -139,3 +139,9 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\ShippingListPage.g.cs
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthlyAttendanceCalendarWindow.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthlyAttendanceCalendarWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthCalendarDialog.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\MonthCalendarDialog.g.cs
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollRecordDialog.baml
+C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\HR\PayrollRecordDialog.g.cs
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\LiveCharts.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\LiveCharts.Wpf.dll

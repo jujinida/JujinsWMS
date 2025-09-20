@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,12 +13,14 @@ namespace jujin.Views.HR
     {
         private readonly HttpClient httpClient;
         private ObservableCollection<VacationRequest> vacationRequests;
+        private ObservableCollection<VacationRequest> allVacationRequests; // 전체 데이터 저장용
 
         public VacationManagementPage()
         {
             InitializeComponent();
             httpClient = new HttpClient();
             vacationRequests = new ObservableCollection<VacationRequest>();
+            allVacationRequests = new ObservableCollection<VacationRequest>();
             VacationDataGrid.ItemsSource = vacationRequests;
             
             Loaded += VacationManagementPage_Loaded;
@@ -43,7 +46,7 @@ namespace jujin.Views.HR
                     };
                     var vacationDtos = JsonSerializer.Deserialize<VacationRequestDto[]>(json, options);
 
-                    vacationRequests.Clear();
+                    allVacationRequests.Clear(); // 전체 데이터 초기화
                     
                     if (vacationDtos != null)
                     {
@@ -65,9 +68,11 @@ namespace jujin.Views.HR
                                 ApprovalStatus = dto.ApprovalStatus
                             };
                             
-                            vacationRequests.Add(vacationRequest);
+                            allVacationRequests.Add(vacationRequest);
                         }
                     }
+                    
+                    ApplyFilters(); // 필터 적용
                 }
                 else
                 {
@@ -189,6 +194,59 @@ namespace jujin.Views.HR
                 var detailDialog = new VacationDetailDialog(selectedVacation);
                 detailDialog.Owner = Window.GetWindow(this);
                 detailDialog.ShowDialog();
+            }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void ApplyFilters()
+        {
+            vacationRequests.Clear();
+
+            var filteredRequests = allVacationRequests.Where(request =>
+            {
+                // 직원명 필터
+                var employeeNameFilter = EmployeeNameFilter.Text.Trim();
+                if (!string.IsNullOrEmpty(employeeNameFilter) && 
+                    !request.EmployeeName.Contains(employeeNameFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                // 부서 필터
+                var selectedDepartment = DepartmentFilter.SelectedItem as ComboBoxItem;
+                if (selectedDepartment != null && selectedDepartment.Tag != null)
+                {
+                    var departmentId = int.Parse(selectedDepartment.Tag.ToString());
+                    if (departmentId != 0)
+                    {
+                        var expectedDepartmentName = GetDepartmentName(departmentId);
+                        if (request.DepartmentName != expectedDepartmentName)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                // 승인상태 필터
+                var selectedStatus = ApprovalStatusFilter.SelectedItem as ComboBoxItem;
+                if (selectedStatus != null && selectedStatus.Content.ToString() != "전체")
+                {
+                    if (request.ApprovalStatus != selectedStatus.Content.ToString())
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            foreach (var request in filteredRequests)
+            {
+                vacationRequests.Add(request);
             }
         }
     }

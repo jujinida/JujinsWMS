@@ -79,11 +79,8 @@ namespace jujin.Views.Inventory
                     return;
                 }
 
-                if (!int.TryParse(StockQuantityTextBox.Text, out int stockQuantity))
-                {
-                    MessageBox.Show("올바른 재고량을 입력해주세요.", "입력 오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                // 재고량은 읽기 전용이므로 검증하지 않음
+                int stockQuantity = productInfo.StockQuantity; // 기존 재고량 유지
 
                 // 카테고리 가져오기
                 string category = CategoryComboBox.SelectedItem is System.Windows.Controls.ComboBoxItem selectedItem ? selectedItem.Content.ToString() : "";

@@ -525,6 +525,66 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, "휴가 거부 중 오류가 발생했습니다.");
             }
         }
+
+        [HttpGet("payroll")]
+        public async Task<IActionResult> GetPayrollData([FromQuery] string paymentMonth = "2025-09")
+        {
+            try
+            {
+                using var conn = new SqlConnection(_connectionString);
+                await conn.OpenAsync();
+
+                string query = @"
+                    SELECT 
+                        E.employee_idx, 
+                        E.employee_name, 
+                        E.department_id, 
+                        E.position, 
+                        P.gross_pay, 
+                        P.allowance, 
+                        P.deductions, 
+                        P.net_pay,
+                        P.payment_month, 
+                        P.payment_date, 
+                        P.payment_status
+                    FROM Employees E 
+                    LEFT JOIN Payroll P ON E.employee_idx = P.employee_idx
+                    WHERE P.payment_month = @PaymentMonth";
+
+                using var cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@PaymentMonth", paymentMonth);
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                var payrollData = new List<PayrollDto>();
+
+                while (await reader.ReadAsync())
+                {
+                    var payroll = new PayrollDto
+                    {
+                        EmployeeId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                        EmployeeName = reader.IsDBNull(1) ? "" : reader.GetString(1),
+                        DepartmentId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                        Position = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                        GrossPay = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                        Allowance = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                        Deductions = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
+                        NetPay = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
+                        PaymentMonth = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                        PaymentDate = reader.IsDBNull(9) ? "" : reader.GetDateTime(9).ToString("yyyy-MM-dd"),
+                        PaymentStatus = reader.IsDBNull(10) ? "" : reader.GetString(10)
+                    };
+
+                    payrollData.Add(payroll);
+                }
+
+                return Ok(payrollData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "급여 데이터를 가져오는 중 오류가 발생했습니다.");
+                return StatusCode(500, "급여 데이터를 가져오는 중 오류가 발생했습니다.");
+            }
+        }
     }
 
     public class EmployeeDto
@@ -578,6 +638,21 @@ namespace WebApplication1.Controllers
         public int DepartmentId { get; set; }
         public int Salary { get; set; }
         public string ProfileUrl { get; set; }
+    }
+
+    public class PayrollDto
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public int DepartmentId { get; set; }
+        public string Position { get; set; }
+        public decimal GrossPay { get; set; }
+        public decimal Allowance { get; set; }
+        public decimal Deductions { get; set; }
+        public decimal NetPay { get; set; }
+        public string PaymentMonth { get; set; }
+        public string PaymentDate { get; set; }
+        public string PaymentStatus { get; set; }
     }
 
     public class VacationRequestDto

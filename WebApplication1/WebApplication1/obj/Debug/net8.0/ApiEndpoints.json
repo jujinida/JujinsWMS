@@ -85,6 +85,22 @@
   },
   {
     "ContainingType": "WebApplication1.Controllers.HRController",
+    "Method": "GetPayrollData",
+    "RelativePath": "api/HR/payroll",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "paymentMonth",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WebApplication1.Controllers.HRController",
     "Method": "RegisterEmployee",
     "RelativePath": "api/HR/register",
     "HttpMethod": "POST",

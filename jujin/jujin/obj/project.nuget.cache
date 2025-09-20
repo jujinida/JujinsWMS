@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "AooSxEiM/eY=",
+  "dgSpecHash": "jxmvNlr7CSA=",
   "success": true,
   "projectFilePath": "C:\\Users\\park\\source\\repos\\jujin\\jujin\\jujin.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,8 @@
     "C:\\Users\\park\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
+    "C:\\Users\\park\\.nuget\\packages\\livecharts\\0.9.7\\livecharts.0.9.7.nupkg.sha512",
+    "C:\\Users\\park\\.nuget\\packages\\livecharts.wpf\\0.9.7\\livecharts.wpf.0.9.7.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\microsoft.bcl.cryptography\\8.0.0\\microsoft.bcl.cryptography.8.0.0.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\microsoft.data.sqlclient\\6.1.1\\microsoft.data.sqlclient.6.1.1.nupkg.sha512",
@@ -45,5 +47,30 @@
     "C:\\Users\\park\\.nuget\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512",
     "C:\\Users\\park\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "프로젝트 대상 프레임워크 'net8.0-windows7.0' 대신 '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1'을(를) 사용하여 패키지 'LiveCharts 0.9.7'을(를) 복원했습니다. 이 패키지는 프로젝트와 완벽하게 호환되지 않을 수 있습니다.",
+      "projectPath": "C:\\Users\\park\\source\\repos\\jujin\\jujin\\jujin.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\park\\source\\repos\\jujin\\jujin\\jujin.csproj",
+      "libraryId": "LiveCharts",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "프로젝트 대상 프레임워크 'net8.0-windows7.0' 대신 '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1'을(를) 사용하여 패키지 'LiveCharts.Wpf 0.9.7'을(를) 복원했습니다. 이 패키지는 프로젝트와 완벽하게 호환되지 않을 수 있습니다.",
+      "projectPath": "C:\\Users\\park\\source\\repos\\jujin\\jujin\\jujin.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\park\\source\\repos\\jujin\\jujin\\jujin.csproj",
+      "libraryId": "LiveCharts.Wpf",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    }
+  ]
 }

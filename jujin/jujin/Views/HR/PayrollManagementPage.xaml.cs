@@ -1,5 +1,9 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,50 +11,144 @@ namespace jujin.Views.HR
 {
     public partial class PayrollManagementPage : UserControl
     {
+        private ObservableCollection<PayrollRecord> payrollRecords;
+        private ObservableCollection<PayrollRecord> allPayrollRecords;
+        private DateTime currentMonth;
+
         public PayrollManagementPage()
         {
             InitializeComponent();
-            LoadSampleData();
+            payrollRecords = new ObservableCollection<PayrollRecord>();
+            allPayrollRecords = new ObservableCollection<PayrollRecord>();
+            PayrollDataGrid.ItemsSource = payrollRecords;
+            
+            // 현재 월로 초기화
+            currentMonth = new DateTime(2025, 9, 1);
+            UpdateMonthDisplay();
+            LoadPayrollData();
         }
 
-        private void LoadSampleData()
+        private async Task LoadPayrollData(string paymentMonth = null)
         {
-            // 샘플 데이터 로드 (실제로는 데이터베이스에서 가져옴)
-            var samplePayrolls = new ObservableCollection<PayrollRecord>
+            try
             {
-                new PayrollRecord { EmployeeId = "EMP001", EmployeeName = "김철수", DepartmentName = "개발팀", Position = "대리", 
-                    BaseSalary = 3500000, Allowance = 500000, Deduction = 400000, NetSalary = 3600000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP002", EmployeeName = "이영희", DepartmentName = "마케팅팀", Position = "과장", 
-                    BaseSalary = 4200000, Allowance = 600000, Deduction = 500000, NetSalary = 4300000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP003", EmployeeName = "박민수", DepartmentName = "인사팀", Position = "차장", 
-                    BaseSalary = 4800000, Allowance = 700000, Deduction = 600000, NetSalary = 4900000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP004", EmployeeName = "최지영", DepartmentName = "재무팀", Position = "부장", 
-                    BaseSalary = 5500000, Allowance = 800000, Deduction = 700000, NetSalary = 5600000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP005", EmployeeName = "정현우", DepartmentName = "영업팀", Position = "사원", 
-                    BaseSalary = 2800000, Allowance = 300000, Deduction = 300000, NetSalary = 2800000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP006", EmployeeName = "한소영", DepartmentName = "기획팀", Position = "대리", 
-                    BaseSalary = 3200000, Allowance = 400000, Deduction = 350000, NetSalary = 3250000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP007", EmployeeName = "윤태호", DepartmentName = "개발팀", Position = "과장", 
-                    BaseSalary = 4500000, Allowance = 650000, Deduction = 550000, NetSalary = 4600000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP008", EmployeeName = "강미래", DepartmentName = "마케팅팀", Position = "사원", 
-                    BaseSalary = 2600000, Allowance = 250000, Deduction = 280000, NetSalary = 2570000, 
-                    PayDate = "2024-02-25", PaymentStatus = "지급완료" },
-                new PayrollRecord { EmployeeId = "EMP009", EmployeeName = "서동현", DepartmentName = "영업팀", Position = "대리", 
-                    BaseSalary = 3300000, Allowance = 450000, Deduction = 380000, NetSalary = 3370000, 
-                    PayDate = "2024-02-25", PaymentStatus = "미지급" },
-                new PayrollRecord { EmployeeId = "EMP010", EmployeeName = "임수진", DepartmentName = "기획팀", Position = "사원", 
-                    BaseSalary = 2700000, Allowance = 280000, Deduction = 290000, NetSalary = 2690000, 
-                    PayDate = "2024-02-25", PaymentStatus = "미지급" }
-            };
+                if (paymentMonth == null)
+                {
+                    paymentMonth = currentMonth.ToString("yyyy-MM");
+                }
 
-            PayrollDataGrid.ItemsSource = samplePayrolls;
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetAsync($"http://localhost:5185/api/hr/payroll?paymentMonth={paymentMonth}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var payrollDtos = JsonSerializer.Deserialize<List<PayrollDto>>(json, options);
+
+                    allPayrollRecords.Clear();
+                    
+                    if (payrollDtos != null)
+                    {
+                        foreach (var dto in payrollDtos)
+                        {
+                            var payrollRecord = new PayrollRecord
+                            {
+                                EmployeeId = dto.EmployeeId.ToString(),
+                                EmployeeName = dto.EmployeeName,
+                                DepartmentName = GetDepartmentName(dto.DepartmentId),
+                                DepartmentId = dto.DepartmentId,
+                                Position = dto.Position,
+                                BaseSalary = dto.GrossPay,
+                                Allowance = dto.Allowance,
+                                Deduction = dto.Deductions,
+                                NetSalary = dto.NetPay,
+                                PayDate = dto.PaymentDate,
+                                PaymentStatus = dto.PaymentStatus
+                            };
+                            allPayrollRecords.Add(payrollRecord);
+                        }
+                    }
+                    
+                    ApplyFilters();
+                }
+                else
+                {
+                    MessageBox.Show("급여 데이터를 불러오는데 실패했습니다.", "오류", 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"급여 데이터를 불러오는 중 오류가 발생했습니다: {ex.Message}", "오류", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void UpdateMonthDisplay()
+        {
+            CurrentMonthText.Text = $"{currentMonth.Year}년 {currentMonth.Month}월";
+        }
+
+        private void ApplyFilters()
+        {
+            payrollRecords.Clear();
+
+            var filteredRecords = allPayrollRecords.Where(record =>
+            {
+                // 직원명 필터
+                var employeeNameFilter = EmployeeNameFilter.Text.Trim();
+                if (!string.IsNullOrEmpty(employeeNameFilter) && 
+                    !record.EmployeeName.Contains(employeeNameFilter, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                // 부서 필터
+                var selectedDepartment = DepartmentFilter.SelectedItem as ComboBoxItem;
+                if (selectedDepartment != null && selectedDepartment.Tag != null)
+                {
+                    var departmentId = int.Parse(selectedDepartment.Tag.ToString());
+                    if (departmentId != 0 && record.DepartmentId != departmentId)
+                    {
+                        return false;
+                    }
+                }
+
+                // 지급상태 필터
+                var selectedStatus = PaymentStatusFilter.SelectedItem as ComboBoxItem;
+                if (selectedStatus != null && selectedStatus.Content.ToString() != "전체")
+                {
+                    if (record.PaymentStatus != selectedStatus.Content.ToString())
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            foreach (var record in filteredRecords)
+            {
+                payrollRecords.Add(record);
+            }
+        }
+
+        private string GetDepartmentName(int departmentId)
+        {
+            return departmentId switch
+            {
+                1 => "IT",
+                2 => "마케팅",
+                3 => "인사",
+                4 => "재무",
+                5 => "영업",
+                6 => "기획",
+                _ => "알 수 없음"
+            };
         }
 
         private void PayrollDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -58,26 +156,46 @@ namespace jujin.Views.HR
             ShowPayrollDetailDialog();
         }
 
-        private void PayButton_Click(object sender, RoutedEventArgs e)
+        private void PreviousMonthButton_Click(object sender, RoutedEventArgs e)
+        {
+            currentMonth = currentMonth.AddMonths(-1);
+            UpdateMonthDisplay();
+            LoadPayrollData();
+        }
+
+        private void NextMonthButton_Click(object sender, RoutedEventArgs e)
+        {
+            currentMonth = currentMonth.AddMonths(1);
+            UpdateMonthDisplay();
+            LoadPayrollData();
+        }
+
+        private void CalendarButton_Click(object sender, RoutedEventArgs e)
+        {
+            var calendarDialog = new MonthCalendarDialog(currentMonth);
+            calendarDialog.Owner = Window.GetWindow(this);
+            
+            if (calendarDialog.ShowDialog() == true)
+            {
+                currentMonth = calendarDialog.SelectedDate;
+                UpdateMonthDisplay();
+                LoadPayrollData();
+            }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void RecordButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedPayroll = PayrollDataGrid.SelectedItem as PayrollRecord;
-            if (selectedPayroll != null && selectedPayroll.PaymentStatus == "미지급")
+            if (selectedPayroll != null)
             {
-                var result = MessageBox.Show($"{selectedPayroll.EmployeeName}님의 급여를 지급하시겠습니까?\n지급액: {selectedPayroll.NetSalary:N0}원", 
-                    "급여 지급 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    selectedPayroll.PaymentStatus = "지급완료";
-                    selectedPayroll.PayDate = DateTime.Now.ToString("yyyy-MM-dd");
-                    MessageBox.Show("급여가 지급되었습니다.", "지급 완료", 
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-            else if (selectedPayroll != null && selectedPayroll.PaymentStatus == "지급완료")
-            {
-                MessageBox.Show("이미 지급된 급여입니다.", "알림", 
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                var recordDialog = new PayrollRecordDialog(selectedPayroll.EmployeeId, currentMonth.Year);
+                recordDialog.Owner = Window.GetWindow(this);
+                recordDialog.ShowDialog();
             }
         }
 
@@ -104,12 +222,29 @@ namespace jujin.Views.HR
         public string EmployeeId { get; set; }
         public string EmployeeName { get; set; }
         public string DepartmentName { get; set; }
+        public int DepartmentId { get; set; }
         public string Position { get; set; }
         public decimal BaseSalary { get; set; }
         public decimal Allowance { get; set; }
         public decimal Deduction { get; set; }
         public decimal NetSalary { get; set; }
         public string PayDate { get; set; }
+        public string PaymentStatus { get; set; }
+    }
+
+    // 백엔드 DTO 클래스
+    public class PayrollDto
+    {
+        public int EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public int DepartmentId { get; set; }
+        public string Position { get; set; }
+        public decimal GrossPay { get; set; }
+        public decimal Allowance { get; set; }
+        public decimal Deductions { get; set; }
+        public decimal NetPay { get; set; }
+        public string PaymentMonth { get; set; }
+        public string PaymentDate { get; set; }
         public string PaymentStatus { get; set; }
     }
 }
