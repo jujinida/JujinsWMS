@@ -154,7 +154,15 @@ namespace jujin.Views.HR
         {
             try
             {
-                var s3Client = new AmazonS3Client("AKIASKD5PB3ZHMNVFSVG", "3mmMbruDzQfsZ61PSCsE6zo92aDc0EmlBA/Axu0I", Amazon.RegionEndpoint.APSoutheast2);
+                var accessKey = App.Configuration["AWS:AccessKey"];
+                var secretKey = App.Configuration["AWS:SecretKey"];
+                
+                if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+                {
+                    throw new InvalidOperationException("AWS 자격증명이 설정되지 않았습니다. appsettings.json을 확인하세요.");
+                }
+                
+                var s3Client = new AmazonS3Client(accessKey, secretKey, Amazon.RegionEndpoint.APSoutheast2);
                 string bucketName = "devmour";
 
                 string fileName = $"employees/{Guid.NewGuid()}{Path.GetExtension(imagePath)}";

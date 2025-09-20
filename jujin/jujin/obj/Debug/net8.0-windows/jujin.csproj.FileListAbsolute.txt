@@ -149,3 +149,13 @@ C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\InventoryDetailWindow.g.cs
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\SalesTrendWindow.baml
 C:\Users\park\source\repos\jujin\jujin\obj\Debug\net8.0-windows\Views\Inventory\SalesTrendWindow.g.cs
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Json.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Physical.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\appsettings.json
+C:\Users\park\source\repos\jujin\jujin\bin\Debug\net8.0-windows\appsettings.Development.json

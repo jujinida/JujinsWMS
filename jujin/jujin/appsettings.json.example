@@ -1,0 +1,11 @@
+{
+  "AWS": {
+    "AccessKey": "YOUR_AWS_ACCESS_KEY",
+    "SecretKey": "YOUR_AWS_SECRET_KEY",
+    "Region": "ap-southeast-2",
+    "S3BucketName": "your-bucket-name"
+  },
+  "JWT": {
+    "SecretKey": "YOUR_JWT_SECRET_KEY"
+  }
+}

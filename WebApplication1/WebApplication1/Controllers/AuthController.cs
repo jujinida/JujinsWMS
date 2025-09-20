@@ -147,7 +147,14 @@ namespace WebApplication1.Controllers
 
             // JWT 생성 (성공 시에만 실행)
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("your-very-long-secret-key-here-1234");
+            var jwtSecret = _configuration["JWT:SecretKey"];
+            
+            if (string.IsNullOrEmpty(jwtSecret))
+            {
+                throw new InvalidOperationException("JWT 시크릿 키가 설정되지 않았습니다. appsettings.json을 확인하세요.");
+            }
+            
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
             var claims = new List<System.Security.Claims.Claim>
     {
         new System.Security.Claims.Claim("userId", request.UserId)

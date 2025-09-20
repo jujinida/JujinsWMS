@@ -1,0 +1,21 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=your-azure-sql-server.database.windows.net;Database=your-database;User Id=your-user;Password=your-password;Connection Timeout=30;Command Timeout=30;Pooling=true;Max Pool Size=100;Min Pool Size=5;"
+  },
+  "AWS": {
+    "AccessKey": "YOUR_AWS_ACCESS_KEY",
+    "SecretKey": "YOUR_AWS_SECRET_KEY",
+    "Region": "ap-southeast-2",
+    "S3BucketName": "your-bucket-name"
+  },
+  "JWT": {
+    "SecretKey": "YOUR_JWT_SECRET_KEY"
+  }
+}

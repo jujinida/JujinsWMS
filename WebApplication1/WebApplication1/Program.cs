@@ -32,13 +32,22 @@ builder.Services.AddSingleton<SqlConnectionStringBuilder>(provider =>
 // AWS S3 서비스 등록
 builder.Services.AddSingleton<IAmazonS3>(provider =>
 {
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var accessKey = configuration["AWS:AccessKey"];
+    var secretKey = configuration["AWS:SecretKey"];
+    
+    if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+    {
+        throw new InvalidOperationException("AWS 자격증명이 설정되지 않았습니다. appsettings.json을 확인하세요.");
+    }
+    
     var s3Config = new Amazon.S3.AmazonS3Config
     {
         RegionEndpoint = Amazon.RegionEndpoint.APSoutheast2,
         ServiceURL = "https://s3.ap-southeast-2.amazonaws.com"
     };
     
-    return new AmazonS3Client("AKIASKD5PB3ZHMNVFSVG", "3mmMbruDzQfsZ61PSCsE6zo92aDc0EmlBA/Axu0I", s3Config);
+    return new AmazonS3Client(accessKey, secretKey, s3Config);
 });
 
 var app = builder.Build();

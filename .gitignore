@@ -1,1 +1,6 @@
 .vs/
+
+# Configuration files with sensitive data
+appsettings.json
+appsettings.*.json
+!appsettings.json.example

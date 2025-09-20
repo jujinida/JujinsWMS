@@ -10,11 +10,18 @@ namespace WebApplication1.Controllers
     [Route("api/auth")]
     public class AuthController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
+
+        public AuthController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            // DB 연결 문자열
-            string connectionString = "Server=jujin.database.windows.net;Database=jujinscshop;User Id=jujin;Password=dkvm7607@;";
+            // DB 연결 문자열 - 설정 파일에서 읽기
+            string connectionString = _configuration.GetConnectionString("DefaultConnection");
             string pwHash = null;
 
             using (var conn = new SqlConnection(connectionString))
@@ -45,7 +52,14 @@ namespace WebApplication1.Controllers
 
             // JWT 생성
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("your-very-long-secret-key-here-1234");
+            var jwtSecret = _configuration["JWT:SecretKey"];
+            
+            if (string.IsNullOrEmpty(jwtSecret))
+            {
+                throw new InvalidOperationException("JWT 시크릿 키가 설정되지 않았습니다. appsettings.json을 확인하세요.");
+            }
+            
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new System.Security.Claims.ClaimsIdentity(new[]

@@ -30,12 +30,20 @@ namespace jujin.Views.Inventory
             currentImageUrl = product.ImageUrl ?? string.Empty;
             
             // AWS S3 클라이언트 초기화
+            var accessKey = App.Configuration["AWS:AccessKey"];
+            var secretKey = App.Configuration["AWS:SecretKey"];
+            
+            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("AWS 자격증명이 설정되지 않았습니다. appsettings.json을 확인하세요.");
+            }
+            
             var s3Config = new AmazonS3Config
             {
                 RegionEndpoint = Amazon.RegionEndpoint.APSoutheast2,
                 ServiceURL = "https://s3.ap-southeast-2.amazonaws.com"
             };
-            s3Client = new AmazonS3Client("AKIASKD5PB3ZHMNVFSVG", "3mmMbruDzQfsZ61PSCsE6zo92aDc0EmlBA/Axu0I", s3Config);
+            s3Client = new AmazonS3Client(accessKey, secretKey, s3Config);
             
             LoadProductData();
         }

@@ -28,7 +28,15 @@ namespace WebApplication1.Controllers
                 ServiceURL = "https://s3.ap-southeast-2.amazonaws.com"
             };
 
-            _s3Client = new AmazonS3Client("AKIASKD5PB3ZHMNVFSVG", "3mmMbruDzQfsZ61PSCsE6zo92aDc0EmlBA/Axu0I", s3Config);
+            var accessKey = _configuration["AWS:AccessKey"];
+            var secretKey = _configuration["AWS:SecretKey"];
+            
+            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("AWS 자격증명이 설정되지 않았습니다. appsettings.json을 확인하세요.");
+            }
+
+            _s3Client = new AmazonS3Client(accessKey, secretKey, s3Config);
         }
 
 
