@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using WebApplication1.Data;
 using WebApplication1.Models;
 
@@ -34,11 +35,10 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var employees = await _context.Employees
+                var employeeDtos = await _context.Employees
                     .OrderBy(e => e.EmployeeId)
+                    .ProjectTo<EmployeeDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
-
-                var employeeDtos = _mapper.Map<List<EmployeeDto>>(employees);
 
                 return Ok(employeeDtos);
             }
@@ -220,12 +220,11 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var vacationRequests = await _context.VacationRequests
+                var vacationRequestDtos = await _context.VacationRequests
                     .Include(v => v.Employee)
                     .OrderBy(v => v.EmployeeId)
+                    .ProjectTo<VacationRequestDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
-
-                var vacationRequestDtos = _mapper.Map<List<VacationRequestDto>>(vacationRequests);
 
                 return Ok(vacationRequestDtos);
             }
@@ -390,13 +389,12 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var payrollData = await _context.Payrolls
+                var payrollDtos = await _context.Payrolls
                     .Include(p => p.Employee)
                     .Where(p => p.PaymentMonth == paymentMonth)
                     .OrderBy(p => p.EmployeeId)
+                    .ProjectTo<PayrollDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
-
-                var payrollDtos = _mapper.Map<List<PayrollDto>>(payrollData);
 
                 return Ok(payrollDtos);
             }

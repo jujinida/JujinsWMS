@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Amazon.S3;
 using Amazon.S3.Model;
 using System.Text;
@@ -574,11 +575,10 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("창고별 재고량 조회 요청: ProductId={ProductId}", productId);
 
-                var productLocations = await _context.ProductLocations
+                var warehouseStocks = await _context.ProductLocations
                     .Where(pl => pl.ProductId == productId)
+                    .ProjectTo<WarehouseStockDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
-
-                var warehouseStocks = _mapper.Map<List<WarehouseStockDto>>(productLocations);
 
                 _logger.LogInformation("창고별 재고량 조회 완료: {Count}개", warehouseStocks.Count);
                 return Ok(warehouseStocks);
@@ -793,11 +793,10 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("재고 현황 조회 요청");
 
-                var products = await _context.Products
+                var inventoryStatusList = await _context.Products
                     .OrderBy(p => p.ProductId)
+                    .ProjectTo<InventoryStatusDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
-
-                var inventoryStatusList = _mapper.Map<List<InventoryStatusDto>>(products);
 
                 _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
 
