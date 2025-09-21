@@ -2,9 +2,12 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Amazon.S3;
 using Amazon.S3.Model;
 using System.Text;
+using WebApplication1.Data;
+using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
@@ -15,11 +18,13 @@ namespace WebApplication1.Controllers
         private readonly ILogger<ProductController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IAmazonS3 _s3Client;
+        private readonly ApplicationDbContext _context;
 
-        public ProductController(ILogger<ProductController> logger, IConfiguration configuration)
+        public ProductController(ILogger<ProductController> logger, IConfiguration configuration, ApplicationDbContext context)
         {
             _logger = logger;
             _configuration = configuration;
+            _context = context;
             
             // AWS S3 클라이언트 설정
             var s3Config = new AmazonS3Config
@@ -47,53 +52,35 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("제품 목록 조회 요청");
 
-                string connectionString = _configuration.GetConnectionString("DefaultConnection");
-                var products = new List<ProductDto>();
-
-                using (var conn = new SqlConnection(connectionString))
-                {
-                    await conn.OpenAsync();
-                    string query = @"
-                        SELECT p.product_id, p.product_name, p.category, p.price, p.stock_quantity, p.safety_stock, 
-                               pl.location_id, p.pd_url
-                        FROM Products p
-                        LEFT JOIN Product_Locations pl ON p.product_id = pl.product_id
-                        ORDER BY p.product_id";
-
-                    using (var cmd = new SqlCommand(query, conn))
+                var productData = await _context.Products
+                    .Include(p => p.ProductLocations)
+                    .OrderBy(p => p.ProductId)
+                    .Select(p => new
                     {
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                var productId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                                var productName = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                                var category = reader.IsDBNull(2) ? null : reader.GetString(2);
-                                var price = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3);
-                                var stockQuantity = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
-                                var safetyStock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
-                                var locationId = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
-                                var imageUrl = reader.IsDBNull(7) ? null : reader.GetString(7);
-                                
-                                _logger.LogDebug("제품 데이터: ID={ProductId}, Name={ProductName}, Category={Category}, Price={Price}, Stock={StockQuantity}, SafetyStock={SafetyStock}, LocationId={LocationId}", 
-                                    productId, productName, category, price, stockQuantity, safetyStock, locationId);
-                                
-                                products.Add(new ProductDto
-                                {
-                                    ProductId = productId,
-                                    ProductName = productName,
-                                    Category = category,
-                                    Price = price,
-                                    StockQuantity = stockQuantity,
-                                    SafetyStock = safetyStock,
-                                    LocationId = locationId,
-                                    LocationName = GetLocationName(locationId),
-                                    ImageUrl = imageUrl
-                                });
-                            }
-                        }
-                    }
-                }
+                        ProductId = p.ProductId,
+                        ProductName = p.ProductName,
+                        Category = p.Category,
+                        Price = p.Price,
+                        StockQuantity = p.StockQuantity,
+                        SafetyStock = p.SafetyStock,
+                        ImageUrl = p.ImageUrl,
+                        ProductLocations = p.ProductLocations
+                    })
+                    .ToListAsync();
+
+                var products = productData.SelectMany(p => p.ProductLocations.DefaultIfEmpty(),
+                    (p, pl) => new ProductDto
+                    {
+                        ProductId = p.ProductId,
+                        ProductName = p.ProductName,
+                        Category = p.Category,
+                        Price = p.Price,
+                        StockQuantity = p.StockQuantity,
+                        SafetyStock = p.SafetyStock,
+                        LocationId = pl != null ? pl.LocationId : 0,
+                        LocationName = pl != null ? GetLocationName(pl.LocationId) : "미지정",
+                        ImageUrl = p.ImageUrl
+                    }).ToList();
 
                 _logger.LogInformation("제품 목록 조회 완료: {Count}개", products.Count);
                 return Ok(products);
@@ -112,56 +99,34 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("제품 등록 요청: {ProductName}", request.ProductName);
 
-                string connectionString = _configuration.GetConnectionString("DefaultConnection");
-
-                using (var conn = new SqlConnection(connectionString))
+                var product = new Product
                 {
-                    await conn.OpenAsync();
+                    ProductName = request.ProductName,
+                    Category = request.Category,
+                    Price = request.Price,
+                    StockQuantity = request.StockQuantity,
+                    SafetyStock = request.SafetyStock,
+                    ImageUrl = request.ImageUrl,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
 
-                    var query = @"
-                        INSERT INTO Products (product_name, category, price, stock_quantity, safety_stock, pd_url)
-                        OUTPUT INSERTED.product_id
-                        VALUES (@product_name, @category, @price, @stock_quantity, @safety_stock, @pd_url)";
+                _context.Products.Add(product);
+                await _context.SaveChangesAsync();
 
-                    using (var cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@product_name", request.ProductName);
-                        cmd.Parameters.AddWithValue("@category", request.Category ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@price", request.Price);
-                        cmd.Parameters.AddWithValue("@stock_quantity", request.StockQuantity);
-                        cmd.Parameters.AddWithValue("@safety_stock", request.SafetyStock);
-                        cmd.Parameters.AddWithValue("@pd_url", request.ImageUrl ?? (object)DBNull.Value);
+                // Product_Locations 테이블에 데이터 삽입
+                var productLocation = new ProductLocation
+                {
+                    ProductId = product.ProductId,
+                    LocationId = request.LocationId,
+                    StockQuantity = request.StockQuantity
+                };
 
-                        var productId = await cmd.ExecuteScalarAsync();
+                _context.ProductLocations.Add(productLocation);
+                await _context.SaveChangesAsync();
 
-                        if (productId != null && productId != DBNull.Value)
-                        {
-                            var newProductId = Convert.ToInt32(productId);
-                            
-                            // Product_Locations 테이블에 데이터 삽입
-                            var locationQuery = @"
-                                INSERT INTO Product_Locations (product_id, location_id, stock_quantity)
-                                VALUES (@product_id, @location_id, @stock_quantity)";
-                            
-                            using (var locationCmd = new SqlCommand(locationQuery, conn))
-                            {
-                                locationCmd.Parameters.AddWithValue("@product_id", newProductId);
-                                locationCmd.Parameters.AddWithValue("@location_id", request.LocationId);
-                                locationCmd.Parameters.AddWithValue("@stock_quantity", request.StockQuantity);
-                                
-                                await locationCmd.ExecuteNonQueryAsync();
-                            }
-                            
-                            _logger.LogInformation("제품 등록 성공: {ProductName}, ProductId={ProductId}", request.ProductName, newProductId);
-                            return Ok(new { message = "제품이 성공적으로 등록되었습니다." });
-                        }
-                        else
-                        {
-                            _logger.LogWarning("제품 등록 실패: {ProductName}", request.ProductName);
-                            return BadRequest(new { message = "제품 등록에 실패했습니다." });
-                        }
-                    }
-                }
+                _logger.LogInformation("제품 등록 성공: {ProductName}, ProductId={ProductId}", request.ProductName, product.ProductId);
+                return Ok(new { message = "제품이 성공적으로 등록되었습니다." });
             }
             catch (Exception ex)
             {
@@ -223,40 +188,22 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("제품 수정 요청: ProductId={ProductId}, ProductName={ProductName}", id, request.ProductName);
 
-                string connectionString = _configuration.GetConnectionString("DefaultConnection");
-
-                using (var conn = new SqlConnection(connectionString))
+                var product = await _context.Products.FindAsync(id);
+                if (product == null)
                 {
-                    await conn.OpenAsync();
-                    string query = @"
-                        UPDATE Products 
-                        SET product_name = @ProductName,
-                            category = @Category,
-                            price = @Price,
-                            stock_quantity = @StockQuantity,
-                            safety_stock = @SafetyStock,
-                            pd_url = @ImageUrl,
-                            updated_at = GETDATE()
-                        WHERE product_id = @ProductId";
-
-                    using (var cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@ProductId", id);
-                        cmd.Parameters.AddWithValue("@ProductName", request.ProductName);
-                        cmd.Parameters.AddWithValue("@Category", request.Category ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@Price", request.Price);
-                        cmd.Parameters.AddWithValue("@StockQuantity", request.StockQuantity);
-                        cmd.Parameters.AddWithValue("@SafetyStock", request.SafetyStock);
-                        cmd.Parameters.AddWithValue("@ImageUrl", request.ImageUrl ?? (object)DBNull.Value);
-
-                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                        
-                        if (rowsAffected == 0)
-                        {
-                            return NotFound(new { message = "제품을 찾을 수 없습니다." });
-                        }
-                    }
+                    return NotFound(new { message = "제품을 찾을 수 없습니다." });
                 }
+
+                // 엔티티 업데이트
+                product.ProductName = request.ProductName;
+                product.Category = request.Category;
+                product.Price = request.Price;
+                product.StockQuantity = request.StockQuantity;
+                product.SafetyStock = request.SafetyStock;
+                product.ImageUrl = request.ImageUrl;
+                product.UpdatedAt = DateTime.Now;
+
+                await _context.SaveChangesAsync();
 
                 _logger.LogInformation("제품 수정 완료: ProductId={ProductId}", id);
                 return Ok(new { message = "제품이 성공적으로 수정되었습니다." });
@@ -651,37 +598,14 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("창고별 재고량 조회 요청: ProductId={ProductId}", productId);
 
-                string connectionString = _configuration.GetConnectionString("DefaultConnection");
-                var warehouseStocks = new List<WarehouseStockDto>();
-
-                using (var conn = new SqlConnection(connectionString))
-                {
-                    await conn.OpenAsync();
-                    string query = @"
-                        SELECT location_id, stock_quantity
-                        FROM Product_Locations
-                        WHERE product_id = @ProductId";
-
-                    using (var cmd = new SqlCommand(query, conn))
+                var warehouseStocks = await _context.ProductLocations
+                    .Where(pl => pl.ProductId == productId)
+                    .Select(pl => new WarehouseStockDto
                     {
-                        cmd.Parameters.AddWithValue("@ProductId", productId);
-                        
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                var locationId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                                var stockQuantity = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                                
-                                warehouseStocks.Add(new WarehouseStockDto
-                                {
-                                    LocationId = locationId,
-                                    StockQuantity = stockQuantity
-                                });
-                            }
-                        }
-                    }
-                }
+                        LocationId = pl.LocationId,
+                        StockQuantity = pl.StockQuantity
+                    })
+                    .ToListAsync();
 
                 _logger.LogInformation("창고별 재고량 조회 완료: {Count}개", warehouseStocks.Count);
                 return Ok(warehouseStocks);
@@ -875,7 +799,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        private string GetLocationName(int locationId)
+        private static string GetLocationName(int locationId)
         {
             return locationId switch
             {
@@ -896,43 +820,23 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("재고 현황 조회 요청");
 
-                string connectionString = _configuration.GetConnectionString("DefaultConnection");
-
-                using (var conn = new SqlConnection(connectionString))
-                {
-                    await conn.OpenAsync();
-
-                    string query = @"
-                        SELECT product_id, product_name, safety_stock, stock_quantity, category, price, pd_url
-                        FROM Products
-                        ORDER BY product_id";
-
-                    var inventoryStatusList = new List<InventoryStatusDto>();
-
-                    using (var cmd = new SqlCommand(query, conn))
+                var inventoryStatusList = await _context.Products
+                    .OrderBy(p => p.ProductId)
+                    .Select(p => new InventoryStatusDto
                     {
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                inventoryStatusList.Add(new InventoryStatusDto
-                                {
-                                    ProductId = reader.GetInt32(0),
-                                    ProductName = reader.GetString(1),
-                                    SafetyStock = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                                    StockQuantity = reader.GetInt32(3),
-                                    Category = reader.IsDBNull(4) ? null : reader.GetString(4),
-                                    Price = reader.GetDecimal(5),
-                                    ImageUrl = reader.IsDBNull(6) ? null : reader.GetString(6)
-                                });
-                            }
-                        }
-                    }
+                        ProductId = p.ProductId,
+                        ProductName = p.ProductName,
+                        SafetyStock = p.SafetyStock,
+                        StockQuantity = p.StockQuantity,
+                        Category = p.Category,
+                        Price = p.Price,
+                        ImageUrl = p.ImageUrl
+                    })
+                    .ToListAsync();
 
-                    _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
+                _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
 
-                    return Ok(inventoryStatusList);
-                }
+                return Ok(inventoryStatusList);
             }
             catch (Exception ex)
             {

@@ -3,6 +3,9 @@ using Microsoft.Data.SqlClient;
 // ILogger를 사용하기 위해 추가
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
+using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
@@ -13,12 +16,14 @@ namespace WebApplication1.Controllers
         private readonly string _connectionString;
         private readonly ILogger<HRController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context;
 
-        public HRController(IConfiguration configuration, ILogger<HRController> logger)
+        public HRController(IConfiguration configuration, ILogger<HRController> logger, ApplicationDbContext context)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
             _logger = logger;
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpGet("employees")]
@@ -26,53 +31,29 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                using var conn = new SqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                string query = @"
-                    SELECT 
-                        employee_idx,
-                        employee_name,
-                        birth_date,
-                        hire_date,
-                        phone_number,
-                        address,
-                        position,
-                        email,
-                        department_id,
-                        salary,
-                        profile_url
-                    FROM Employees
-                    ORDER BY employee_idx";
-
-                using var cmd = new SqlCommand(query, conn);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                var employees = new List<EmployeeDto>();
-                while (await reader.ReadAsync())
-                {
-                    var employee = new EmployeeDto();
-
-                    // 각 필드를 안전하게 읽기 (SQL 쿼리 순서에 맞춰 인덱스 수정)
-                    employee.EmployeeId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);  // employee_idx
-                    employee.EmployeeName = reader.IsDBNull(1) ? "" : reader.GetString(1);  // employee_name
-                    employee.BirthDate = reader.IsDBNull(2) ? "" : reader.GetDateTime(2).ToString("yyyy-MM-dd");  // birth_date
-                    employee.HireDate = reader.IsDBNull(3) ? "" : reader.GetDateTime(3).ToString("yyyy-MM-dd");  // hire_date
-                    employee.PhoneNumber = reader.IsDBNull(4) ? "" : reader.GetString(4);  // phone_number
-                    employee.Address = reader.IsDBNull(5) ? "" : reader.GetString(5);  // address
-                    employee.Position = reader.IsDBNull(6) ? "" : reader.GetString(6);  // position
-                    employee.Email = reader.IsDBNull(7) ? "" : reader.GetString(7);  // email
-                    employee.DepartmentId = reader.IsDBNull(8) ? 0 : reader.GetInt32(8);  // department_id
-                    employee.Salary = reader.IsDBNull(9) ? 0 : reader.GetInt32(9);  // salary
-                    employee.ProfileUrl = reader.IsDBNull(10) ? "" : reader.GetString(10);  // profile_url
-                    
-                    employees.Add(employee);
-                }
+                var employees = await _context.Employees
+                    .OrderBy(e => e.EmployeeId)
+                    .Select(e => new EmployeeDto
+                    {
+                        EmployeeId = e.EmployeeId,
+                        EmployeeName = e.EmployeeName,
+                        BirthDate = e.BirthDate.HasValue ? e.BirthDate.Value.ToString("yyyy-MM-dd") : "",
+                        HireDate = e.HireDate.HasValue ? e.HireDate.Value.ToString("yyyy-MM-dd") : "",
+                        PhoneNumber = e.PhoneNumber ?? "",
+                        Address = e.Address ?? "",
+                        Position = e.Position ?? "",
+                        Email = e.Email ?? "",
+                        DepartmentId = e.DepartmentId,
+                        Salary = e.Salary,
+                        ProfileUrl = e.ProfileUrl ?? ""
+                    })
+                    .ToListAsync();
 
                 return Ok(employees);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "직원 목록 조회 중 오류 발생");
                 return StatusCode(500, new { message = $"직원 목록 조회 중 오류가 발생했습니다: {ex.Message}" });
             }
         }
@@ -82,49 +63,31 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                using var conn = new SqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                string query = @"
-                    UPDATE Employees SET
-                        employee_name = @EmployeeName,
-                        birth_date = @BirthDate,
-                        hire_date = @HireDate,
-                        phone_number = @PhoneNumber,
-                        address = @Address,
-                        position = @Position,
-                        email = @Email,
-                        department_id = @DepartmentId,
-                        salary = @Salary,
-                        profile_url = @ProfileUrl
-                    WHERE employee_idx = @EmployeeId";
-
-                using var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@EmployeeName", request.EmployeeName);
-                cmd.Parameters.AddWithValue("@BirthDate", DateTime.Parse(request.BirthDate));
-                cmd.Parameters.AddWithValue("@HireDate", DateTime.Parse(request.HireDate));
-                cmd.Parameters.AddWithValue("@PhoneNumber", request.PhoneNumber);
-                cmd.Parameters.AddWithValue("@Address", request.Address ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Position", request.Position);
-                cmd.Parameters.AddWithValue("@Email", request.Email ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@DepartmentId", request.DepartmentId);
-                cmd.Parameters.AddWithValue("@Salary", request.Salary);
-                cmd.Parameters.AddWithValue("@ProfileUrl", request.ProfileUrl ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
-
-                int rowsAffected = await cmd.ExecuteNonQueryAsync();
-
-                if (rowsAffected > 0)
+                var employee = await _context.Employees.FindAsync(employeeId);
+                if (employee == null)
                 {
-                    return Ok(new { message = "직원 정보가 수정되었습니다." });
+                    return NotFound(new { message = "직원을 찾을 수 없습니다." });
                 }
-                else
-                {
-                    return BadRequest(new { message = "직원 정보 수정에 실패했습니다." });
-                }
+
+                // 엔티티 업데이트
+                employee.EmployeeName = request.EmployeeName;
+                employee.BirthDate = DateTime.Parse(request.BirthDate);
+                employee.HireDate = DateTime.Parse(request.HireDate);
+                employee.PhoneNumber = request.PhoneNumber;
+                employee.Address = request.Address;
+                employee.Position = request.Position;
+                employee.Email = request.Email;
+                employee.DepartmentId = request.DepartmentId;
+                employee.Salary = request.Salary;
+                employee.ProfileUrl = request.ProfileUrl;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "직원 정보가 수정되었습니다." });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "직원 정보 수정 중 오류 발생");
                 return StatusCode(500, new { message = $"직원 정보 수정 중 오류가 발생했습니다: {ex.Message}" });
             }
         }
@@ -256,60 +219,28 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                using var conn = new SqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                string query = @"
-                    INSERT INTO Employees (
-                        employee_name, 
-                        birth_date, 
-                        hire_date, 
-                        phone_number, 
-                        address, 
-                        position, 
-                        email, 
-                        department_id, 
-                        salary, 
-                        profile_url
-                    ) 
-                    VALUES (
-                        @EmployeeName, 
-                        @BirthDate, 
-                        @HireDate, 
-                        @PhoneNumber, 
-                        @Address, 
-                        @Position, 
-                        @Email, 
-                        @DepartmentId, 
-                        @Salary, 
-                        @ProfileUrl
-                    )";
-
-                using var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@EmployeeName", request.EmployeeName);
-                cmd.Parameters.AddWithValue("@BirthDate", DateTime.Parse(request.BirthDate));
-                cmd.Parameters.AddWithValue("@HireDate", DateTime.Parse(request.HireDate));
-                cmd.Parameters.AddWithValue("@PhoneNumber", request.PhoneNumber);
-                cmd.Parameters.AddWithValue("@Address", request.Address ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@Position", request.Position);
-                cmd.Parameters.AddWithValue("@Email", request.Email ?? (object)DBNull.Value);
-                cmd.Parameters.AddWithValue("@DepartmentId", request.DepartmentId);
-                cmd.Parameters.AddWithValue("@Salary", request.Salary);
-                cmd.Parameters.AddWithValue("@ProfileUrl", request.ProfileUrl ?? (object)DBNull.Value);
-
-                int rowsAffected = await cmd.ExecuteNonQueryAsync();
-
-                if (rowsAffected > 0)
+                var employee = new Employee
                 {
-                    return Ok(new { message = "직원 등록이 완료되었습니다." });
-                }
-                else
-                {
-                    return BadRequest(new { message = "직원 등록에 실패했습니다." });
-                }
+                    EmployeeName = request.EmployeeName,
+                    BirthDate = DateTime.Parse(request.BirthDate),
+                    HireDate = DateTime.Parse(request.HireDate),
+                    PhoneNumber = request.PhoneNumber,
+                    Address = request.Address,
+                    Position = request.Position,
+                    Email = request.Email,
+                    DepartmentId = request.DepartmentId,
+                    Salary = request.Salary,
+                    ProfileUrl = request.ProfileUrl
+                };
+
+                _context.Employees.Add(employee);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "직원 등록이 완료되었습니다." });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "직원 등록 중 오류 발생");
                 return StatusCode(500, new { message = $"직원 등록 중 오류가 발생했습니다: {ex.Message}" });
             }
         }
@@ -319,54 +250,27 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                using var conn = new SqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                string query = @"
-                    SELECT 
-                        V.request_id,
-                        E.employee_idx, 
-                        E.employee_name, 
-                        E.department_id, 
-                        E.position, 
-                        V.reason, 
-                        V.start_date, 
-                        V.end_date, 
-                        V.vacation_days, 
-                        V.is_half_day, 
-                        E.remaining_vacation_days, 
-                        E.total_vacation_days, 
-                        V.approval_status
-                    FROM Employees E 
-                    LEFT JOIN Vacation_Requests V ON E.employee_idx = V.employee_idx
-                    ORDER BY E.employee_idx";
-
-                using var cmd = new SqlCommand(query, conn);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                var vacationRequests = new List<VacationRequestDto>();
-
-                while (await reader.ReadAsync())
-                {
-                    var vacationRequest = new VacationRequestDto
-                    {
-                        RequestId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
-                        EmployeeId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
-                        EmployeeName = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                        DepartmentId = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                        Position = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                        Reason = reader.IsDBNull(5) ? "" : reader.GetString(5),
-                        StartDate = reader.IsDBNull(6) ? "" : reader.GetDateTime(6).ToString("yyyy-MM-dd"),
-                        EndDate = reader.IsDBNull(7) ? "" : reader.GetDateTime(7).ToString("yyyy-MM-dd"),
-                        VacationDays = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
-                        IsHalfDay = reader.IsDBNull(9) ? false : reader.GetBoolean(9),
-                        RemainingVacationDays = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
-                        TotalVacationDays = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                        ApprovalStatus = reader.IsDBNull(12) ? "" : reader.GetString(12)
-                    };
-
-                    vacationRequests.Add(vacationRequest);
-                }
+                var vacationRequests = await _context.Employees
+                    .Include(e => e.VacationRequests)
+                    .OrderBy(e => e.EmployeeId)
+                    .SelectMany(e => e.VacationRequests.DefaultIfEmpty(), 
+                        (e, v) => new VacationRequestDto
+                        {
+                            RequestId = v != null ? v.RequestId : 0,
+                            EmployeeId = e.EmployeeId,
+                            EmployeeName = e.EmployeeName,
+                            DepartmentId = e.DepartmentId,
+                            Position = e.Position ?? "",
+                            Reason = v != null ? v.Reason ?? "" : "",
+                            StartDate = v != null && v.StartDate.HasValue ? v.StartDate.Value.ToString("yyyy-MM-dd") : "",
+                            EndDate = v != null && v.EndDate.HasValue ? v.EndDate.Value.ToString("yyyy-MM-dd") : "",
+                            VacationDays = v != null ? v.VacationDays ?? 0 : 0,
+                            IsHalfDay = v != null ? v.IsHalfDay ?? false : false,
+                            RemainingVacationDays = e.RemainingVacationDays ?? 0,
+                            TotalVacationDays = e.TotalVacationDays ?? 0,
+                            ApprovalStatus = v != null ? v.ApprovalStatus ?? "" : ""
+                        })
+                    .ToListAsync();
 
                 return Ok(vacationRequests);
             }
@@ -531,51 +435,25 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                using var conn = new SqlConnection(_connectionString);
-                await conn.OpenAsync();
-
-                string query = @"
-                    SELECT 
-                        E.employee_idx, 
-                        E.employee_name, 
-                        E.department_id, 
-                        E.position, 
-                        P.gross_pay, 
-                        P.allowance, 
-                        P.deductions, 
-                        P.net_pay,
-                        P.payment_month, 
-                        P.payment_date, 
-                        P.payment_status
-                    FROM Employees E 
-                    LEFT JOIN Payroll P ON E.employee_idx = P.employee_idx
-                    WHERE P.payment_month = @PaymentMonth";
-
-                using var cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@PaymentMonth", paymentMonth);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                var payrollData = new List<PayrollDto>();
-
-                while (await reader.ReadAsync())
-                {
-                    var payroll = new PayrollDto
-                    {
-                        EmployeeId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
-                        EmployeeName = reader.IsDBNull(1) ? "" : reader.GetString(1),
-                        DepartmentId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                        Position = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                        GrossPay = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
-                        Allowance = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
-                        Deductions = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
-                        NetPay = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
-                        PaymentMonth = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                        PaymentDate = reader.IsDBNull(9) ? "" : reader.GetDateTime(9).ToString("yyyy-MM-dd"),
-                        PaymentStatus = reader.IsDBNull(10) ? "" : reader.GetString(10)
-                    };
-
-                    payrollData.Add(payroll);
-                }
+                var payrollData = await _context.Employees
+                    .Include(e => e.Payrolls)
+                    .Where(e => e.Payrolls.Any(p => p.PaymentMonth == paymentMonth))
+                    .SelectMany(e => e.Payrolls.Where(p => p.PaymentMonth == paymentMonth),
+                        (e, p) => new PayrollDto
+                        {
+                            EmployeeId = e.EmployeeId,
+                            EmployeeName = e.EmployeeName,
+                            DepartmentId = e.DepartmentId,
+                            Position = e.Position ?? "",
+                            GrossPay = p.GrossPay ?? 0,
+                            Allowance = p.Allowance ?? 0,
+                            Deductions = p.Deductions ?? 0,
+                            NetPay = p.NetPay ?? 0,
+                            PaymentMonth = p.PaymentMonth ?? "",
+                            PaymentDate = p.PaymentDate.HasValue ? p.PaymentDate.Value.ToString("yyyy-MM-dd") : "",
+                            PaymentStatus = p.PaymentStatus ?? ""
+                        })
+                    .ToListAsync();
 
                 return Ok(payrollData);
             }

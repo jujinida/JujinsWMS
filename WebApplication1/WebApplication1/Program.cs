@@ -1,7 +1,9 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Amazon.S3;
+using WebApplication1.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Entity Framework Core 등록
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // SQL Server 연결 풀링 최적화
 builder.Services.AddSingleton<SqlConnectionStringBuilder>(provider =>
