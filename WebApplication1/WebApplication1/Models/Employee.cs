@@ -41,9 +41,11 @@ namespace WebApplication1.Models
         public string? ProfileUrl { get; set; }
 
         [Column("remaining_vacation_days")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal? RemainingVacationDays { get; set; }
 
         [Column("total_vacation_days")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public int? TotalVacationDays { get; set; }
 
         // Navigation Properties

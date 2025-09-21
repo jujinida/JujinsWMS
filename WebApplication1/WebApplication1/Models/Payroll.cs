@@ -7,7 +7,7 @@ namespace WebApplication1.Models
     public class Payroll
     {
         [Key]
-        [Column("payroll_id")]
+        [Column("payment_id")]
         public int PayrollId { get; set; }
 
         [Column("employee_idx")]

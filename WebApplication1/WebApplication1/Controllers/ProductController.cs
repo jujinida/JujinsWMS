@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using Amazon.S3;
 using Amazon.S3.Model;
 using System.Text;
@@ -19,12 +20,14 @@ namespace WebApplication1.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAmazonS3 _s3Client;
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public ProductController(ILogger<ProductController> logger, IConfiguration configuration, ApplicationDbContext context)
+        public ProductController(ILogger<ProductController> logger, IConfiguration configuration, ApplicationDbContext context, IMapper mapper)
         {
             _logger = logger;
             _configuration = configuration;
             _context = context;
+            _mapper = mapper;
             
             // AWS S3 클라이언트 설정
             var s3Config = new AmazonS3Config
@@ -55,28 +58,17 @@ namespace WebApplication1.Controllers
                 var productData = await _context.Products
                     .Include(p => p.ProductLocations)
                     .OrderBy(p => p.ProductId)
-                    .Select(p => new
-                    {
-                        ProductId = p.ProductId,
-                        ProductName = p.ProductName,
-                        Category = p.Category,
-                        Price = p.Price,
-                        StockQuantity = p.StockQuantity,
-                        SafetyStock = p.SafetyStock,
-                        ImageUrl = p.ImageUrl,
-                        ProductLocations = p.ProductLocations
-                    })
                     .ToListAsync();
 
                 var products = productData.SelectMany(p => p.ProductLocations.DefaultIfEmpty(),
                     (p, pl) => new ProductDto
                     {
                         ProductId = p.ProductId,
-                        ProductName = p.ProductName,
+                        ProductName = p.ProductName ?? "",
                         Category = p.Category,
-                        Price = p.Price,
-                        StockQuantity = p.StockQuantity,
-                        SafetyStock = p.SafetyStock,
+                        Price = p.Price ?? 0,
+                        StockQuantity = p.StockQuantity ?? 0,
+                        SafetyStock = p.SafetyStock ?? 0,
                         LocationId = pl != null ? pl.LocationId : 0,
                         LocationName = pl != null ? GetLocationName(pl.LocationId) : "미지정",
                         ImageUrl = p.ImageUrl
@@ -99,17 +91,7 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("제품 등록 요청: {ProductName}", request.ProductName);
 
-                var product = new Product
-                {
-                    ProductName = request.ProductName,
-                    Category = request.Category,
-                    Price = request.Price,
-                    StockQuantity = request.StockQuantity,
-                    SafetyStock = request.SafetyStock,
-                    ImageUrl = request.ImageUrl,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
+                var product = _mapper.Map<Product>(request);
 
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
@@ -157,13 +139,13 @@ namespace WebApplication1.Controllers
 
                     // 테스트 데이터 삽입
                     string insertQuery = @"
-                        INSERT INTO Products (product_name, category, price, stock_quantity, pd_url, created_at, updated_at)
+                        INSERT INTO Products (product_name, category, price, stock_quantity, pd_url)
                         VALUES 
-                        ('테스트 제품 1', '주류', 15000, 50, 'https://example.com/image1.jpg', GETDATE(), GETDATE()),
-                        ('테스트 제품 2', '음료', 3000, 100, 'https://example.com/image2.jpg', GETDATE(), GETDATE()),
-                        ('테스트 제품 3', '기타', 25000, 30, 'https://example.com/image3.jpg', GETDATE(), GETDATE()),
-                        ('테스트 제품 4', '주류', 45000, 20, 'https://example.com/image4.jpg', GETDATE(), GETDATE()),
-                        ('테스트 제품 5', '음료', 5000, 80, 'https://example.com/image5.jpg', GETDATE(), GETDATE())";
+                        ('테스트 제품 1', '주류', 15000, 50, 'https://example.com/image1.jpg'),
+                        ('테스트 제품 2', '음료', 3000, 100, 'https://example.com/image2.jpg'),
+                        ('테스트 제품 3', '기타', 25000, 30, 'https://example.com/image3.jpg'),
+                        ('테스트 제품 4', '주류', 45000, 20, 'https://example.com/image4.jpg'),
+                        ('테스트 제품 5', '음료', 5000, 80, 'https://example.com/image5.jpg')";
 
                     using (var insertCmd = new SqlCommand(insertQuery, conn))
                     {
@@ -194,14 +176,8 @@ namespace WebApplication1.Controllers
                     return NotFound(new { message = "제품을 찾을 수 없습니다." });
                 }
 
-                // 엔티티 업데이트
-                product.ProductName = request.ProductName;
-                product.Category = request.Category;
-                product.Price = request.Price;
-                product.StockQuantity = request.StockQuantity;
-                product.SafetyStock = request.SafetyStock;
-                product.ImageUrl = request.ImageUrl;
-                product.UpdatedAt = DateTime.Now;
+                // AutoMapper로 업데이트
+                _mapper.Map(request, product);
 
                 await _context.SaveChangesAsync();
 
@@ -259,7 +235,7 @@ namespace WebApplication1.Controllers
                             int newStock = currentStock + request.Quantity;
                             string updateQuery = @"
                                 UPDATE Products 
-                                SET stock_quantity = @NewStock, updated_at = GETDATE()
+                                SET stock_quantity = @NewStock
                                 WHERE product_id = @ProductId";
 
                             using (var updateCmd = new SqlCommand(updateQuery, conn, transaction))
@@ -410,7 +386,7 @@ namespace WebApplication1.Controllers
                             
                             string updateQuery = @"
                                 UPDATE Product_Locations 
-                                SET stock_quantity = @NewStock, updated_at = GETDATE()
+                                SET stock_quantity = @NewStock
                                 WHERE product_id = @ProductId AND location_id = @LocationId";
 
                             _logger.LogInformation("창고 재고량 출고 업데이트: ProductId={ProductId}, LocationId={LocationId}, OldStock={OldStock}, NewStock={NewStock}, Quantity={Quantity}", 
@@ -598,14 +574,11 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("창고별 재고량 조회 요청: ProductId={ProductId}", productId);
 
-                var warehouseStocks = await _context.ProductLocations
+                var productLocations = await _context.ProductLocations
                     .Where(pl => pl.ProductId == productId)
-                    .Select(pl => new WarehouseStockDto
-                    {
-                        LocationId = pl.LocationId,
-                        StockQuantity = pl.StockQuantity
-                    })
                     .ToListAsync();
+
+                var warehouseStocks = _mapper.Map<List<WarehouseStockDto>>(productLocations);
 
                 _logger.LogInformation("창고별 재고량 조회 완료: {Count}개", warehouseStocks.Count);
                 return Ok(warehouseStocks);
@@ -705,7 +678,7 @@ namespace WebApplication1.Controllers
                                 // 기존 레코드가 있으면 UPDATE
                                 string updateQuery = @"
                                     UPDATE Product_Locations 
-                                    SET stock_quantity = @NewStock, updated_at = GETDATE()
+                                    SET stock_quantity = @NewStock
                                     WHERE product_id = @ProductId AND location_id = @LocationId";
 
                                 _logger.LogInformation("창고 재고량 업데이트: ProductId={ProductId}, LocationId={LocationId}, OldStock={OldStock}, NewStock={NewStock}, Quantity={Quantity}", 
@@ -820,19 +793,11 @@ namespace WebApplication1.Controllers
             {
                 _logger.LogInformation("재고 현황 조회 요청");
 
-                var inventoryStatusList = await _context.Products
+                var products = await _context.Products
                     .OrderBy(p => p.ProductId)
-                    .Select(p => new InventoryStatusDto
-                    {
-                        ProductId = p.ProductId,
-                        ProductName = p.ProductName,
-                        SafetyStock = p.SafetyStock,
-                        StockQuantity = p.StockQuantity,
-                        Category = p.Category,
-                        Price = p.Price,
-                        ImageUrl = p.ImageUrl
-                    })
                     .ToListAsync();
+
+                var inventoryStatusList = _mapper.Map<List<InventoryStatusDto>>(products);
 
                 _logger.LogInformation("재고 현황 조회 완료: {Count}개 항목", inventoryStatusList.Count);
 

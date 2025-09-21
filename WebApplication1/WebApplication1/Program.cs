@@ -18,6 +18,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// AutoMapper 등록
+builder.Services.AddAutoMapper(typeof(Program));
+
 // SQL Server 연결 풀링 최적화
 builder.Services.AddSingleton<SqlConnectionStringBuilder>(provider =>
 {

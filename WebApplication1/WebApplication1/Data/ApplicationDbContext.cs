@@ -58,6 +58,17 @@ namespace WebApplication1.Data
             modelBuilder.Entity<ProductLocation>()
                 .HasKey(pl => new { pl.ProductId, pl.LocationId });
 
+            // Employee 필드 설정
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.RemainingVacationDays)
+                .HasDefaultValue(0m)
+                .ValueGeneratedOnAddOrUpdate();
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.TotalVacationDays)
+                .HasDefaultValue(0)
+                .ValueGeneratedOnAddOrUpdate();
+
             // 인덱스 설정
             modelBuilder.Entity<AttendanceRecord>()
                 .HasIndex(ar => ar.RecordDate);

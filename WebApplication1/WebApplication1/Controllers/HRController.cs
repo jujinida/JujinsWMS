@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using AutoMapper;
 using WebApplication1.Data;
 using WebApplication1.Models;
 
@@ -17,13 +18,15 @@ namespace WebApplication1.Controllers
         private readonly ILogger<HRController> _logger;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public HRController(IConfiguration configuration, ILogger<HRController> logger, ApplicationDbContext context)
+        public HRController(IConfiguration configuration, ILogger<HRController> logger, ApplicationDbContext context, IMapper mapper)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
             _logger = logger;
             _configuration = configuration;
             _context = context;
+            _mapper = mapper;
         }
 
         [HttpGet("employees")]
@@ -33,23 +36,11 @@ namespace WebApplication1.Controllers
             {
                 var employees = await _context.Employees
                     .OrderBy(e => e.EmployeeId)
-                    .Select(e => new EmployeeDto
-                    {
-                        EmployeeId = e.EmployeeId,
-                        EmployeeName = e.EmployeeName,
-                        BirthDate = e.BirthDate.HasValue ? e.BirthDate.Value.ToString("yyyy-MM-dd") : "",
-                        HireDate = e.HireDate.HasValue ? e.HireDate.Value.ToString("yyyy-MM-dd") : "",
-                        PhoneNumber = e.PhoneNumber ?? "",
-                        Address = e.Address ?? "",
-                        Position = e.Position ?? "",
-                        Email = e.Email ?? "",
-                        DepartmentId = e.DepartmentId,
-                        Salary = e.Salary,
-                        ProfileUrl = e.ProfileUrl ?? ""
-                    })
                     .ToListAsync();
 
-                return Ok(employees);
+                var employeeDtos = _mapper.Map<List<EmployeeDto>>(employees);
+
+                return Ok(employeeDtos);
             }
             catch (Exception ex)
             {
@@ -69,17 +60,8 @@ namespace WebApplication1.Controllers
                     return NotFound(new { message = "직원을 찾을 수 없습니다." });
                 }
 
-                // 엔티티 업데이트
-                employee.EmployeeName = request.EmployeeName;
-                employee.BirthDate = DateTime.Parse(request.BirthDate);
-                employee.HireDate = DateTime.Parse(request.HireDate);
-                employee.PhoneNumber = request.PhoneNumber;
-                employee.Address = request.Address;
-                employee.Position = request.Position;
-                employee.Email = request.Email;
-                employee.DepartmentId = request.DepartmentId;
-                employee.Salary = request.Salary;
-                employee.ProfileUrl = request.ProfileUrl;
+                // AutoMapper로 업데이트
+                _mapper.Map(request, employee);
 
                 await _context.SaveChangesAsync();
 
@@ -219,19 +201,7 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var employee = new Employee
-                {
-                    EmployeeName = request.EmployeeName,
-                    BirthDate = DateTime.Parse(request.BirthDate),
-                    HireDate = DateTime.Parse(request.HireDate),
-                    PhoneNumber = request.PhoneNumber,
-                    Address = request.Address,
-                    Position = request.Position,
-                    Email = request.Email,
-                    DepartmentId = request.DepartmentId,
-                    Salary = request.Salary,
-                    ProfileUrl = request.ProfileUrl
-                };
+                var employee = _mapper.Map<Employee>(request);
 
                 _context.Employees.Add(employee);
                 await _context.SaveChangesAsync();
@@ -250,29 +220,14 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var vacationRequests = await _context.Employees
-                    .Include(e => e.VacationRequests)
-                    .OrderBy(e => e.EmployeeId)
-                    .SelectMany(e => e.VacationRequests.DefaultIfEmpty(), 
-                        (e, v) => new VacationRequestDto
-                        {
-                            RequestId = v != null ? v.RequestId : 0,
-                            EmployeeId = e.EmployeeId,
-                            EmployeeName = e.EmployeeName,
-                            DepartmentId = e.DepartmentId,
-                            Position = e.Position ?? "",
-                            Reason = v != null ? v.Reason ?? "" : "",
-                            StartDate = v != null && v.StartDate.HasValue ? v.StartDate.Value.ToString("yyyy-MM-dd") : "",
-                            EndDate = v != null && v.EndDate.HasValue ? v.EndDate.Value.ToString("yyyy-MM-dd") : "",
-                            VacationDays = v != null ? v.VacationDays ?? 0 : 0,
-                            IsHalfDay = v != null ? v.IsHalfDay ?? false : false,
-                            RemainingVacationDays = e.RemainingVacationDays ?? 0,
-                            TotalVacationDays = e.TotalVacationDays ?? 0,
-                            ApprovalStatus = v != null ? v.ApprovalStatus ?? "" : ""
-                        })
+                var vacationRequests = await _context.VacationRequests
+                    .Include(v => v.Employee)
+                    .OrderBy(v => v.EmployeeId)
                     .ToListAsync();
 
-                return Ok(vacationRequests);
+                var vacationRequestDtos = _mapper.Map<List<VacationRequestDto>>(vacationRequests);
+
+                return Ok(vacationRequestDtos);
             }
             catch (Exception ex)
             {
@@ -435,27 +390,15 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var payrollData = await _context.Employees
-                    .Include(e => e.Payrolls)
-                    .Where(e => e.Payrolls.Any(p => p.PaymentMonth == paymentMonth))
-                    .SelectMany(e => e.Payrolls.Where(p => p.PaymentMonth == paymentMonth),
-                        (e, p) => new PayrollDto
-                        {
-                            EmployeeId = e.EmployeeId,
-                            EmployeeName = e.EmployeeName,
-                            DepartmentId = e.DepartmentId,
-                            Position = e.Position ?? "",
-                            GrossPay = p.GrossPay ?? 0,
-                            Allowance = p.Allowance ?? 0,
-                            Deductions = p.Deductions ?? 0,
-                            NetPay = p.NetPay ?? 0,
-                            PaymentMonth = p.PaymentMonth ?? "",
-                            PaymentDate = p.PaymentDate.HasValue ? p.PaymentDate.Value.ToString("yyyy-MM-dd") : "",
-                            PaymentStatus = p.PaymentStatus ?? ""
-                        })
+                var payrollData = await _context.Payrolls
+                    .Include(p => p.Employee)
+                    .Where(p => p.PaymentMonth == paymentMonth)
+                    .OrderBy(p => p.EmployeeId)
                     .ToListAsync();
 
-                return Ok(payrollData);
+                var payrollDtos = _mapper.Map<List<PayrollDto>>(payrollData);
+
+                return Ok(payrollDtos);
             }
             catch (Exception ex)
             {
